@@ -18,6 +18,8 @@ export const useGlobalStore = defineStore("global", {
     cachedNews: [],
     // 新增: 收藏的新闻ID列表
     favoriteNewsIds: [],
+    // 新增: 点赞的新闻ID列表
+    likedNewsIds: [],
   }),
 
   // 新增: Getters 用于派生状态
@@ -31,7 +33,7 @@ export const useGlobalStore = defineStore("global", {
       return state.favoriteNewsIds.includes(newsId);
     },
     /**
-     * 获取所有已收藏的新闻对象 
+     * 获取所有已收藏的新闻对象
      * @param {object} state
      * @returns {Array<object>}
      */
@@ -47,6 +49,10 @@ export const useGlobalStore = defineStore("global", {
      */
     favoriteCount: (state) => {
       return state.favoriteNewsIds.length;
+    },
+    // 新增: 检查新闻是否已点赞
+    isLiked: (state) => (newsId) => {
+      return state.likedNewsIds.includes(newsId);
     },
   },
 
@@ -120,6 +126,16 @@ export const useGlobalStore = defineStore("global", {
         // 如果未收藏，则添加收藏
         this.favoriteNewsIds.push(newsId);
         this.showMessage("收藏成功", "success");
+      }
+    },
+    // 新增: 切换新闻的点赞状态
+    toggleLike(newsId) {
+      const index = this.likedNewsIds.indexOf(newsId);
+      if (index > -1) {
+        this.likedNewsIds.splice(index, 1);
+      } else {
+        this.likedNewsIds.push(newsId);
+        this.showMessage("点赞成功！", "success");
       }
     },
   },

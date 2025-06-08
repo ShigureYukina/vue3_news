@@ -35,18 +35,24 @@
         </div>
         <el-divider />
         <div class="stats-section">
-          <h4 class="stats-title">阅读统计</h4>
+          <h4 class="stats-title">用户统计</h4>
           <el-row :gutter="20">
-            <el-col :span="12">
+            <el-col :span="8">
               <el-statistic
                 title="已读文章"
                 :value="userProfile.stats.articlesRead"
               />
             </el-col>
-            <el-col :span="12">
+            <el-col :span="8">
               <el-statistic
                 title="已发评论"
                 :value="userProfile.stats.commentsMade"
+              />
+            </el-col>
+            <el-col :span="8">
+              <el-statistic
+                title="获得点赞"
+                :value="userProfile.stats.likesReceived"
               />
             </el-col>
           </el-row>
@@ -58,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, watchEffect } from "vue"; 
 import { useGlobalStore } from "@/store/global";
 import { userService } from "@/services/userService";
 import {
@@ -72,17 +78,36 @@ import {
   ElStatistic,
   ElEmpty,
 } from "element-plus";
-
+const props = defineProps({
+  userId: {
+    type: String,
+    required: false, // 因为路由参数是可选的
+  },
+});
 const store = useGlobalStore();
 const userProfile = ref(null);
 const loading = ref(true);
 
-onMounted(async () => {
+
+watchEffect(async () => {
+  // 优先使用路由传来的 props.userId, 如果没有（例如访问 /profile），则回退到store中的当前用户ID
+  const targetUserId = props.userId || store.userId;
+
+  if (!targetUserId) {
+    console.warn("无法确定目标用户ID");
+    store.showMessage("无法加载用户信息，未指定用户", "warning");
+    loading.value = false;
+    return;
+  }
+  
+  loading.value = true;
+  userProfile.value = null; // 在加载新数据前清空旧数据
+
   try {
-    const response = await userService.getProfile(store.userId);
+    const response = await userService.getProfile(targetUserId);
     userProfile.value = response.data;
   } catch (error) {
-    console.error("获取用户信息失败:", error);
+    console.error(`获取用户(ID: ${targetUserId})信息失败:`, error);
     store.showMessage("获取用户信息失败", "error");
   } finally {
     loading.value = false;

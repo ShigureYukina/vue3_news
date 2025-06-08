@@ -17,24 +17,12 @@
       v-else-if="article"
       class="bg-white p-4 md:p-6 rounded-lg shadow-sm"
     >
-      <div class="flex justify-between items-start mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex-grow pr-4">
+      <div class="mb-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
           {{ article.title }}
         </h1>
-        <!-- 新增: 收藏按钮 -->
-        <el-button
-          circle
-          size="large"
-          @click="toggleFavorite"
-          :type="isArticleFavorite ? 'warning' : 'info'"
-          :title="isArticleFavorite ? '取消收藏' : '点击收藏'"
-          class="flex-shrink-0"
-        >
-          <el-icon :size="20"
-            ><StarFilled v-if="isArticleFavorite" /><Star v-else
-          /></el-icon>
-        </el-button>
       </div>
+
       <div class="text-sm text-gray-500 mb-4 flex items-center flex-wrap">
         <el-tag type="info" size="small" class="mr-2 mb-1">
           分类:
@@ -76,6 +64,26 @@
         v-html="article.fullContent || article.content"
       ></div>
 
+     <div class="interaction-bar">
+        <el-button text @click="handleLike">
+          <el-icon><CaretTop /></el-icon>
+          <span>{{ article.likes + (isArticleLiked ? 1 : 0) }} 点赞</span>
+        </el-button>
+
+        <el-button text @click="toggleFavorite" :class="{ 'is-favorite': isArticleFavorite }">
+          <el-icon>
+            <StarFilled v-if="isArticleFavorite" />
+            <Star v-else />
+          </el-icon>
+          <span>{{ displayedFavorites }} 收藏</span>
+        </el-button>
+        <el-button text @click="openShareDialog">
+          <el-icon><Share /></el-icon>
+          <span>{{ article.shares }} 分享</span>
+        </el-button>
+      </div>
+
+
       <el-divider />
 
       <section class="mt-8">
@@ -105,23 +113,26 @@
           </el-form-item>
         </el-form>
 
-        <div v-if="comments.length > 0" class="space-y-4 mt-6">
-          <el-card
-            v-for="comment in comments"
-            :key="comment.id"
-            shadow="never"
-            class="comment-card"
-          >
-            <!-- 显示评论内容 -->
-            <p class="text-gray-800">{{ comment.content }}</p>
-            <!-- 显示评论作者和日期 -->
-            <div class="text-xs text-gray-500 mt-2">
-              <div class="comment-avatar" v-html="comment.avatarSvg"></div>
-              <span class="comment-username">{{ comment.author }}</span>
-              <span class="comment-date">{{ comment.date }}</span>
-            </div>
-          </el-card>
-        </div>
+      <div v-if="comments.length > 0" class="space-y-4 mt-6">
+  <el-card
+    v-for="comment in comments"
+    :key="comment.id"
+    shadow="never"
+    class="comment-card"
+  >
+    <p class="text-gray-800">{{ comment.content }}</p>
+    <div class="text-xs text-gray-500 mt-2 comment-meta">
+      <router-link
+        :to="{ name: 'Profile', params: { userId: comment.userId } }"
+        class="comment-author-link"
+      >
+        <div class="comment-avatar" v-html="comment.avatarSvg"></div>
+        <span class="comment-username">{{ comment.author }}</span>
+      </router-link>
+      <span class="comment-date">{{ comment.date }}</span>
+    </div>
+  </el-card>
+</div>
         <el-empty
           v-else
           description="暂无评论，快来发表第一条评论吧！"
@@ -130,17 +141,25 @@
       </section>
     </article>
   </div>
+      <el-dialog v-model="shareDialogVisible" title="分享这篇文章" width="500px">
+        <p class="mb-4">通过以下链接分享：</p>
+        <el-input :value="currentUrl" readonly>
+            <template #append>
+                <el-button @click="copyUrl">复制链接</el-button>
+            </template>
+        </el-input>
+    </el-dialog>
 </template>
 
 <script>
 import { mapStores } from "pinia";
 import { useGlobalStore } from "../store/global";
 import { newsService } from "../services/newsService";
-import { Picture, Star, StarFilled } from "@element-plus/icons-vue"; // 引入 Star 和 StarFilled 图标
+import { Picture, Star, StarFilled, Share, CaretTop } from "@element-plus/icons-vue";
 
 export default {
   name: "NewsDetailPage",
-  components: { Picture, Star, StarFilled }, // 注册图标组件
+  components: { Picture, Star, StarFilled, Share, CaretTop },
   props: ["id"],
   data() {
     return {
@@ -150,6 +169,7 @@ export default {
       commentForm: { text: "" },
       comments: [],
       submittingComment: false,
+      shareDialogVisible: false,
     };
   },
   computed: {
@@ -161,13 +181,31 @@ export default {
         month: "long",
         day: "numeric",
       });
-    },
-    // 新增: 计算属性，判断当前文章是否已收藏
-    isArticleFavorite() {
+	  },
+    displayedFavorites() {
+      if (!this.article) return 0;
+
+      // 原始收藏数
+      const baseFavorites = this.article.favorites || 0;
+      
+      // 我们假设从后端获取的收藏数不包含当前用户的本次操作
+      // 如果当前用户已收藏，则在原始基础上 +1
+      return baseFavorites + (this.isArticleFavorite ? 1 : 0);
+	  },
+	  isArticleFavorite() {
       if (!this.article) return false;
       return this.globalStore.isFavorite(this.article.id);
     },
+    isArticleLiked() {
+        if (!this.article) return false;
+        return this.globalStore.isLiked(this.article.id);
+    },
+    currentUrl() {
+        return window.location.href;
+    }
+
   },
+  
   methods: {
     async fetchArticleData() {
       this.isLoading = true;
@@ -183,14 +221,18 @@ export default {
         this.isLoading = false;
       }
     },
-    goBack() {
-      this.$router.go(-1);
-    },
-    // 新增: 切换收藏状态的方法
     toggleFavorite() {
       if (this.article) {
         this.globalStore.toggleFavorite(this.article.id);
       }
+    },
+    handleLike() {
+        if (this.article) {
+            this.globalStore.toggleLike(this.article.id);
+        }
+    },
+    openShareDialog() {
+      this.shareDialogVisible = true;
     },
     async submitComment() {
       if (!this.commentForm.text.trim()) {
@@ -198,15 +240,12 @@ export default {
         return;
       }
       this.submittingComment = true;
-      // 模拟提交
       await new Promise((resolve) => setTimeout(resolve, 500));
-      // multiavatar is not defined. For now, we'll skip it.
       this.comments.unshift({
         id: Date.now(),
         author: "当前用户",
         content: this.commentForm.text,
         date: new Date().toLocaleString("zh-CN"),
-        // avatarSvg: multiavatar(Date.now().toString()),
         avatarSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#${Math.floor(
           Math.random() * 16777215
         )
@@ -217,7 +256,17 @@ export default {
       this.globalStore.showMessage("评论已提交!", "success");
       this.submittingComment = false;
     },
+    copyUrl() {
+        navigator.clipboard.writeText(this.currentUrl).then(() => {
+            this.globalStore.showMessage('链接已复制到剪贴板', 'success');
+            this.shareDialogVisible = false;
+        }).catch(err => {
+            console.error('复制失败: ', err);
+            this.globalStore.showMessage('复制失败，请手动复制', 'error');
+        });
+    }
   },
+  
   created() {
     this.fetchArticleData();
   },
@@ -250,12 +299,12 @@ article.bg-white {
   color: #f9fafb; /* 浅色文字 */
 }
 
-.text-2xl.md\:text-3xl {
+h1.text-2xl {
   color: #1f2937;
   line-height: 1.3;
 }
 
-.dark .text-2xl.md\:text-3xl {
+.dark h1.text-2xl {
   color: #f9fafb; /* 浅色文字 */
 }
 
@@ -349,6 +398,46 @@ article.bg-white {
   border-color: #374151; /* 深色边框 */
 }
 
+/* ===== NEW/UPDATED STYLES ===== */
+.interaction-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6b7280;
+    margin-top: 1.5rem;
+    padding: 0.5rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.dark .interaction-bar {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+}
+
+.interaction-bar .el-button {
+    font-size: 0.9rem;
+    color: #606266;
+    flex-grow: 1; /* 让按钮平分空间 */
+    justify-content: center;
+}
+
+.dark .interaction-bar .el-button {
+  color: #d1d5db;
+}
+
+.interaction-bar .el-button .el-icon {
+    margin-right: 6px;
+    font-size: 1.1rem;
+}
+
+/* 已收藏状态的高亮样式 */
+.interaction-bar .el-button.is-favorite {
+  color: var(--el-color-warning);
+}
+
 section.mt-8 h2.text-xl {
   color: #1f2937;
   padding-bottom: 0.5rem;
@@ -394,11 +483,13 @@ section.mt-8 h2.text-xl {
   color: #f9fafb; /* 浅色文字 */
 }
 
-.comment-card p.text-xs.text-gray-500 {
+.comment-card .text-xs.text-gray-500 {
   color: #9ca3af;
+  display: flex;
+  align-items: center;
 }
 
-.dark .comment-card p.text-xs.text-gray-500 {
+.dark .comment-card .text-xs.text-gray-500 {
   color: #d1d5db; /* 灰白色文字 */
 }
 
@@ -409,6 +500,7 @@ section.mt-8 h2.text-xl {
 .dark .el-empty {
   background-color: #1f2937; /* 深色背景 */
 }
+
 
 /* 响应式设计调整 */
 @media (max-width: 768px) {
@@ -423,7 +515,7 @@ section.mt-8 h2.text-xl {
     border-radius: 0;
     box-shadow: none;
   }
-  .text-2xl.md\:text-3xl {
+  h1.text-2xl {
     font-size: 1.6rem;
   }
   .el-image.max-h-96 {
@@ -443,5 +535,26 @@ section.mt-8 h2.text-xl {
   margin-right: 8px;
   display: inline-block;
   vertical-align: middle;
+}
+.comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comment-author-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit; /* 继承父元素颜色 */
+  transition: opacity 0.2s;
+}
+
+.comment-author-link:hover {
+  opacity: 0.7;
+}
+
+.comment-username {
+  font-weight: 500;
 }
 </style>

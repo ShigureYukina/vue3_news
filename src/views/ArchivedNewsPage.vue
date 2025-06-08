@@ -69,16 +69,6 @@ async function loadArchivedNews() {
 
 // 首次加载
 onMounted(loadArchivedNews);
-// KeepAlive 激活时更新数据
-onActivated(() => {
-  internalCounter.value++;
-  loadArchivedNews();
-  globalStore.showMessage("已进入缓存新闻页面 (activated)", "info");
-});
-// KeepAlive 停用时释放资源
-onDeactivated(() => {
-  globalStore.showMessage("已离开缓存新闻页面 (deactivated)", "info");
-});
 </script>
 
 <style scoped>

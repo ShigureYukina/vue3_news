@@ -8,10 +8,11 @@ import CategoriesPage from "../views/CategoriesPage.vue"; // 分类页面组件
 import ArchivedNewsPage from "../views/ArchivedNewsPage.vue"; // 缓存新闻页面组件
 import DynamicDemoPage from "../views/DynamicDemoPage.vue"; // 动态演示页面组件
 import AboutPage from "../views/AboutPage.vue"; // 关于页面组件
-import FavoritesPage from "../views/FavoritesPage.vue"; // 新增: 收藏页面组件
-import ProfilePage from "../views/ProfilePage.vue"; // 新增: 个人信息页面
-import DashboardPage from "../views/DashboardPage.vue"; // 新增: 数据大屏页面
+import FavoritesPage from "../views/FavoritesPage.vue"; // 收藏页面组件
+import DashboardPage from "../views/DashboardPage.vue"; // 数据大屏页面
 import NotFoundPage from "../views/NotFoundPage.vue"; // 404页面组件
+// --- 修复：移除了重复的 ProfilePage 导入 ---
+import ProfilePage from "../views/ProfilePage.vue"; // 个人信息页面
 
 // 定义路由规则
 const routes = [
@@ -54,26 +55,27 @@ const routes = [
     component: DynamicDemoPage,
     meta: { title: "动态组件演示" },
   },
-  // 新增: 收藏页面路由
+  // 收藏页面路由
   {
     path: "/favorites",
     name: "Favorites",
     component: FavoritesPage,
     meta: { title: "我的收藏" },
   },
-  // 新增:个人信息路由
-  {
-    path: "/profile",
-    name: "Profile",
-    component: ProfilePage,
-    meta: { title: "个人信息" },
-  },
-  // 新增：数据大屏路由
+  // 数据大屏路由
   {
     path: "/dashboard",
     name: "Dashboard",
     component: DashboardPage,
     meta: { title: "数据大屏" },
+  },
+  // --- 修复：合并了两个冲突的 'Profile' 路由，并补全了 meta 信息 ---
+  {
+    path: "/profile/:userId?", // 使用 :userId 定义动态参数，? 表示参数可选
+    name: "Profile", // 保证 name 唯一
+    component: ProfilePage,
+    props: true, // 将路由参数 (userId) 作为 props 传递给组件
+    meta: { title: "个人信息" }, // 补全 meta 信息
   },
   // 关于我们路由
   {

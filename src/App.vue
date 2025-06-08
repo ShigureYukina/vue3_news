@@ -86,7 +86,6 @@ import { onMounted, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useGlobalStore } from "./store/global";
 import {
-  ElMessage,
   ElConfigProvider,
   ElSwitch,
   ElBadge,
@@ -94,6 +93,7 @@ import {
   ElDropdownMenu,
   ElDropdownItem,
   ElIcon,
+  ElNotification,
 } from "element-plus";
 import { Moon, Sunny, ArrowDown, User } from "@element-plus/icons-vue";
 
@@ -105,9 +105,10 @@ watch(
   () => globalStore.message,
   (newMessage) => {
     if (newMessage && newMessage.text) {
-      ElMessage({
+      ElNotification({
+        title: newMessage.type.charAt(0).toUpperCase() + newMessage.type.slice(1),
         message: newMessage.text,
-        type: newMessage.type || "info",
+        type: newMessage.type,
         duration: 3000,
         showClose: true,
       });

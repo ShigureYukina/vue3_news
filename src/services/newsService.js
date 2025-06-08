@@ -1,10 +1,9 @@
 // src/services/newsService.js
 import Mock from "mockjs";
 import multiavatar from "@multiavatar/multiavatar";
+import { getUserBaseById } from "./userService";
 
 const R = Mock.Random; // Mock.Random 的别名，方便使用
-
-// --- 配置 Mock.Random 的默认图片占位符服务 (可选, Mock.js 默认可能生成 base64) ---
 
 // --- 生成单条新闻数据的辅助函数 ---
 const generateSingleNewsItem = (id, specifiedCategory) => {
@@ -16,7 +15,7 @@ const generateSingleNewsItem = (id, specifiedCategory) => {
     "娱乐",
     "教育",
     "健康",
-    "技术",
+    // "技术", // (已移除重复项)
     "旅游",
     "时政",
   ]; // 新闻分类示例
@@ -26,7 +25,7 @@ const generateSingleNewsItem = (id, specifiedCategory) => {
     title: title,
     content: Mock.mock("@csentence(25, 60)"), // 中文摘要，25到60个字
     category: specifiedCategory || R.pick(categories), // 随机选择一个分类
-    date: Mock.mock("@date(yyyy-MM-dd)"), // 日期，格式 yyyy-MM-dd
+    date: Mock.mock("@date(yyyy-MM-dd)"), // 日期，格式 YYYY-MM-DD
     // 使用 placehold.co 生成图片 URL，确保 URL 是直接可用的
     imageUrl: `https://placehold.co/600x400/${R.hex()
       .substring(1)
@@ -36,22 +35,36 @@ const generateSingleNewsItem = (id, specifiedCategory) => {
     fullContent: Mock.mock(`@cparagraph(5, 15)`), // 完整内容，5到15个段落
     views: Mock.mock("@integer(50, 3000)"), // 浏览量，50到3000
     author: Mock.mock("@cname"), // 作者名称
+    // --- 互动数据 ---
+    likes: Mock.mock("@integer(10, 1000)"),
+    shares: Mock.mock("@integer(5, 200)"),
+    // ===== 新增: 随机生成收藏数 =====
+    favorites: Mock.mock("@integer(10, 500)"),
+
     comments: Mock.mock({
       "list|0-5": [
         {
+          "userId|1-100": 1, // 先只生成一个 1-100 的随机ID
           id: "@increment",
-          author: "@cname",
-          content: "@cparagraph(1, 3)",
-          date: '@datetime("yyyy-MM-dd HH:mm:ss")',
-          avatarSvg: multiavatar(Mock.mock("@guid")), // 使用 Multiavatar 生成随机头像 SVG 字符串
         },
       ],
-    }).list,
+    }).list.map((comment) => {
+      // 根据随机生成的 userId，从用户中心获取固定的用户信息
+      const user = getUserBaseById(comment.userId);
+      // 组装成最终的评论对象
+      return {
+        ...comment,
+        author: user.username, // 使用固定的用户名
+        avatarSvg: user.avatar, // 使用固定的头像
+        content: Mock.mock("@cparagraph(1, 3)"), // 评论内容依然随机
+        date: Mock.mock('@datetime("yyyy-MM-dd HH:mm:ss")'), // 日期依然随机
+      };
+    }),
   };
 };
 
 // --- 为当前会话生成一组固定的模拟新闻数据 ---
-const TOTAL_NEWS_ITEMS = Math.floor(Math.random() * 10) + 10; // 生成10-21之间的随机数量
+const TOTAL_NEWS_ITEMS = Math.floor(Math.random() * 10) + 20; // 生成20-30之间的随机数量
 const mockNewsDataStore = (() => {
   const data = [];
   for (let i = 0; i < TOTAL_NEWS_ITEMS; i++) {
@@ -92,7 +105,7 @@ export const newsService = {
 
   async getNewsById(id) {
     const articleId = parseInt(id);
-    console.log(`Workspaceing news by id (Mock.js): ${articleId}`);
+    console.log(`Fetching news by id (Mock.js): ${articleId}`); // (修正了拼写错误)
     // 模拟网络延迟
     await new Promise((resolve) =>
       setTimeout(resolve, 150 + Math.random() * 300)

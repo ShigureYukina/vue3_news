@@ -1,5 +1,4 @@
 <template>
-  <!-- 新闻列表项组件 -->
   <el-card
     class="news-list-item"
     :body-style="{ padding: '0px' }"
@@ -7,7 +6,6 @@
     shadow="hover"
   >
     <div class="card-content-wrapper">
-      <!-- 图片区域 -->
       <div v-if="article.imageUrl" class="image-container">
         <el-image :src="article.imageUrl" fit="cover" class="news-image">
           <template #error>
@@ -18,9 +16,7 @@
           </template>
         </el-image>
       </div>
-      <!-- 内容区域 -->
       <div class="content-container">
-        <!-- 标题和关闭按钮 -->
         <div class="header">
           <h3 class="title" v-highlight="props.highlightText">
             {{ article.title }}
@@ -55,7 +51,10 @@
           <p class="summary" v-if="article.summary">{{ article.summary }}</p>
           <div class="footer">
             <div class="stats">
-              <span>阅读量: {{ article.views }}</span>
+              <span><el-icon><View /></el-icon> {{ article.views }}</span>
+              <span><el-icon><Pointer /></el-icon> {{ article.likes }}</span>
+              <span><el-icon><Star /></el-icon> {{ article.favorites }}</span>
+              <span><el-icon><Share /></el-icon> {{ article.shares }}</span>
               <el-tag
                 v-if="isRead"
                 type="info"
@@ -95,7 +94,15 @@
 
 import { ref, defineProps, defineEmits } from "vue";
 import { ElMessage } from "element-plus";
-import { Picture, CloseBold } from "@element-plus/icons-vue";
+// ===== UPDATED: 导入新增的图标 =====
+import {
+  Picture,
+  CloseBold,
+  View,
+  Pointer,
+  Star,
+  Share,
+} from "@element-plus/icons-vue";
 import { useGlobalStore } from "@/store/global";
 
 const props = defineProps({
@@ -134,7 +141,8 @@ const formatDate = (dateString) => {
   if (isNaN(date.getTime())) {
     return "日期无效"; // 如果日期无效，则返回提示信息
   }
-  return date.toLocaleDateString();
+  // 使用台湾时区来格式化日期
+  return date.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
 };
 
 /**
@@ -353,20 +361,32 @@ const vHighlight = {
   justify-content: space-between;
   align-items: center;
   font-size: 0.8rem;
-  color: #aaa;
 }
 
-.dark .footer {
-  color: #d1d5db; /* 灰白色文字 */
-}
-
+/* ===== NEW/UPDATED STYLES for stats ===== */
 .stats {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px; /* 使用 gap 属性来创建元素间的空隙 */
+  color: #888;
+}
+
+.dark .stats {
+  color: #d1d5db; /* 灰白色文字 */
+}
+
+.stats > span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stats .el-icon {
+  margin-right: 4px; /* 图标和文字之间的距离 */
+  font-size: 1.1em;
 }
 
 .read-tag {
-  margin-left: 10px;
   background-color: #e0e0e0; /* 浅灰色背景 */
   color: #555555; /* 深灰色文字 */
   border: none; /* 移除边框 */
