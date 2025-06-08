@@ -113,12 +113,9 @@
 </template>
 
 <script setup>
-
 defineOptions({
   name: "AboutPage",
 });
-
-
 </script>
 
 <style scoped>
@@ -131,10 +128,9 @@ defineOptions({
 }
 
 .content-card {
-  border: none; 
-  padding: 1rem 0; 
+  border: none;
+  padding: 1rem 0;
 }
-
 
 .tech-stack-display .el-col {
   margin-bottom: 16px;

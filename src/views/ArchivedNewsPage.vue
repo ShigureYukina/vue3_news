@@ -1,9 +1,6 @@
 <template>
   <div class="archived-news-page">
-    <el-page-header
-      @back="$router.back()"
-    >
-    </el-page-header>
+    <el-page-header @back="$router.back()"> </el-page-header>
 
     <el-alert type="info" show-icon :closable="false" class="mb-4">
       <p>

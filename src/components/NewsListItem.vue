@@ -32,7 +32,10 @@
             size="small"
             class="close-button"
             @click.stop="toggleFeedbackOptions"
-            style="background-color: rgba(128, 128, 128, 0.5); border-color: transparent;"
+            style="
+              background-color: rgba(128, 128, 128, 0.5);
+              border-color: transparent;
+            "
           />
         </div>
         <div v-if="!showFeedbackOptions">
@@ -164,7 +167,7 @@ const submitFeedback = () => {
     articleId: props.article.id,
     reason: selectedReason.value,
   });
-  showFeedbackOptions.value = false; 
+  showFeedbackOptions.value = false;
 };
 
 /**
@@ -235,7 +238,7 @@ const vHighlight = {
 
 .card-content-wrapper {
   display: flex;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .image-container {

@@ -1,9 +1,6 @@
 <template>
   <div class="categories-page">
-    <el-page-header
-      @back="$router.back()"
-    >
-    </el-page-header>
+    <el-page-header @back="$router.back()"> </el-page-header>
 
     <el-skeleton :rows="5" animated v-if="isLoading" />
     <el-alert
@@ -15,7 +12,6 @@
     />
 
     <el-row :gutter="20" v-else>
-		
       <el-col
         :xs="24"
         :sm="12"
@@ -31,9 +27,7 @@
             }"
           >
             <div>
-              <span
-                >{{ category.name }}</span
-              >
+              <span>{{ category.name }}</span>
               <el-tag type="info" round>{{ category.count }} 篇</el-tag>
             </div>
           </router-link>
@@ -84,5 +78,4 @@ onMounted(fetchCategories);
 .category-card:hover {
   border-color: var(--el-color-primary);
 }
-
 </style>

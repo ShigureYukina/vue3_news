@@ -1,9 +1,6 @@
 <template>
   <div class="news-detail-page">
-    <el-page-header
-      @back="$router.back()"
-    >
-    </el-page-header>
+    <el-page-header @back="$router.back()"></el-page-header>
 
     <el-skeleton :rows="10" animated v-if="isLoading" />
 
@@ -20,10 +17,23 @@
       v-else-if="article"
       class="bg-white p-4 md:p-6 rounded-lg shadow-sm"
     >
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+      <div class="flex justify-between items-start mb-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex-grow pr-4">
           {{ article.title }}
         </h1>
+        <!-- 新增: 收藏按钮 -->
+        <el-button
+          circle
+          size="large"
+          @click="toggleFavorite"
+          :type="isArticleFavorite ? 'warning' : 'info'"
+          :title="isArticleFavorite ? '取消收藏' : '点击收藏'"
+          class="flex-shrink-0"
+        >
+          <el-icon :size="20"
+            ><StarFilled v-if="isArticleFavorite" /><Star v-else
+          /></el-icon>
+        </el-button>
       </div>
       <div class="text-sm text-gray-500 mb-4 flex items-center flex-wrap">
         <el-tag type="info" size="small" class="mr-2 mb-1">
@@ -125,13 +135,12 @@
 <script>
 import { mapStores } from "pinia";
 import { useGlobalStore } from "../store/global";
-
 import { newsService } from "../services/newsService";
-import { Picture } from "@element-plus/icons-vue"; // 图标
+import { Picture, Star, StarFilled } from "@element-plus/icons-vue"; // 引入 Star 和 StarFilled 图标
 
 export default {
   name: "NewsDetailPage",
-  components: { Picture }, // 注册图标组件
+  components: { Picture, Star, StarFilled }, // 注册图标组件
   props: ["id"],
   data() {
     return {
@@ -153,6 +162,11 @@ export default {
         day: "numeric",
       });
     },
+    // 新增: 计算属性，判断当前文章是否已收藏
+    isArticleFavorite() {
+      if (!this.article) return false;
+      return this.globalStore.isFavorite(this.article.id);
+    },
   },
   methods: {
     async fetchArticleData() {
@@ -161,9 +175,7 @@ export default {
       try {
         const response = await newsService.getNewsById(this.id);
         this.article = response.data;
-        // 将模拟的评论数据赋值给组件的 comments 数组
         this.comments = this.article.comments || [];
-        // 将当前新闻加入缓存
         this.globalStore.addCachedNews(this.article);
       } catch (err) {
         this.error = err.response?.data?.message || "无法加载新闻详情。";
@@ -174,6 +186,12 @@ export default {
     goBack() {
       this.$router.go(-1);
     },
+    // 新增: 切换收藏状态的方法
+    toggleFavorite() {
+      if (this.article) {
+        this.globalStore.toggleFavorite(this.article.id);
+      }
+    },
     async submitComment() {
       if (!this.commentForm.text.trim()) {
         this.globalStore.showMessage("评论内容不能为空!", "warning");
@@ -182,14 +200,19 @@ export default {
       this.submittingComment = true;
       // 模拟提交
       await new Promise((resolve) => setTimeout(resolve, 500));
+      // multiavatar is not defined. For now, we'll skip it.
       this.comments.unshift({
-        // 新评论放前面
-        id: Date.now(), // 使用当前时间戳作为模拟ID
-        author: "当前用户", // 模拟当前用户
-        content: this.commentForm.text, // 使用 commentForm.text 作为评论内容
-						date: new Date().toLocaleString("zh-CN"), // 使用当前时间作为评论日期
-						avatarSvg: multiavatar(Date.now().toString()), // 为新评论生成随机头像 SVG 字符串
-					});
+        id: Date.now(),
+        author: "当前用户",
+        content: this.commentForm.text,
+        date: new Date().toLocaleString("zh-CN"),
+        // avatarSvg: multiavatar(Date.now().toString()),
+        avatarSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#${Math.floor(
+          Math.random() * 16777215
+        )
+          .toString(16)
+          .padStart(6, "0")}"/></svg>`,
+      });
       this.commentForm.text = "";
       this.globalStore.showMessage("评论已提交!", "success");
       this.submittingComment = false;
@@ -209,7 +232,7 @@ export default {
 <style scoped>
 /* 页面整体布局样式 */
 .news-detail-page {
-  background-color: #f9fafb; 
+  background-color: #f9fafb;
 }
 
 .dark .news-detail-page {
@@ -228,7 +251,7 @@ article.bg-white {
 }
 
 .text-2xl.md\:text-3xl {
-  color: #1f2937; 
+  color: #1f2937;
   line-height: 1.3;
 }
 
@@ -237,11 +260,11 @@ article.bg-white {
 }
 
 .text-sm.text-gray-500 {
-  color: #6b7280; 
+  color: #6b7280;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem; 
+  gap: 0.5rem;
 }
 
 .dark .text-sm.text-gray-500 {
@@ -249,8 +272,8 @@ article.bg-white {
 }
 
 .text-sm.text-gray-500 .el-tag {
-  background-color: #e5e7eb; 
-  color: #374151; 
+  background-color: #e5e7eb;
+  color: #374151;
   border: none;
 }
 
@@ -274,8 +297,8 @@ article.bg-white {
   align-items: center;
   width: 100%;
   height: 100%;
-  background: #f3f4f6; 
-  color: #9ca3af; 
+  background: #f3f4f6;
+  color: #9ca3af;
   font-size: 14px;
 }
 
@@ -286,7 +309,7 @@ article.bg-white {
 
 .prose {
   font-size: 1.05rem;
-  color: #374151;  
+  color: #374151;
 }
 
 .dark .prose {
@@ -307,8 +330,8 @@ article.bg-white {
   font-size: 1.6em;
   margin-top: 2em;
   margin-bottom: 0.75em;
-  color: #111827; 
-  border-bottom: 1px solid #e5e7eb; 
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
   padding-bottom: 0.3em;
 }
 
@@ -344,7 +367,7 @@ section.mt-8 h2.text-xl {
 
 .comment-card {
   background-color: #fff;
-  border: 1px solid #e5e7eb; 
+  border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
   transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
@@ -401,7 +424,7 @@ section.mt-8 h2.text-xl {
     box-shadow: none;
   }
   .text-2xl.md\:text-3xl {
-    font-size: 1.6rem; 
+    font-size: 1.6rem;
   }
   .el-image.max-h-96 {
     max-height: 220px;

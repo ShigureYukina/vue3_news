@@ -3,34 +3,59 @@
     <el-container class="app-el-container">
       <el-header class="app-header shadow-md">
         <div class="container">
-          <div class="logo-title" @click="$router.push('/')">
-            新闻中心
-          </div>
+          <div class="logo-title" @click="$router.push('/')">新闻中心</div>
 
-  <el-menu
-    mode="horizontal"
-    class="app-menu"
-    background-color="transparent"
-    text-color="#ffffff"
-    active-text-color="#ffd04b"
-    :ellipsis="false"
-    router
-  >
-    <el-menu-item index="/">首页</el-menu-item>
-    <el-menu-item index="/categories">分类</el-menu-item>
-    <el-menu-item index="/archived">缓存新闻</el-menu-item>
-    <el-menu-item index="/about">关于</el-menu-item>
-  </el-menu>
+          <el-menu
+            mode="horizontal"
+            class="app-menu"
+            background-color="transparent"
+            text-color="#ffffff"
+            active-text-color="#ffd04b"
+            :ellipsis="false"
+            router
+            :default-active="activeRoute"
+          >
+            <el-menu-item index="/">首页</el-menu-item>
+            <el-menu-item index="/categories">分类</el-menu-item>
+            <el-menu-item index="/archived">缓存新闻</el-menu-item>
+            <el-menu-item index="/favorites">
+              <div class="flex items-center">
+                <span>我的收藏</span>
+                <el-badge
+                  :value="globalStore.favoriteCount"
+                  :hidden="globalStore.favoriteCount === 0"
+                  class="ml-2"
+                />
+              </div>
+            </el-menu-item>
+            <el-menu-item index="/about">关于</el-menu-item>
+          </el-menu>
 
           <div class="header-right">
-            <div class="user-info">
-              当前用户ID: {{ globalStore.userId }}
-            </div>
+            <el-dropdown trigger="click">
+              <div class="user-info-dropdown">
+                <span style="color: #ffffff">ID: {{ globalStore.userId }}</span>
+                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="$router.push('/dashboard')">
+                    <el-icon><DataLine /></el-icon>
+                    数据大屏
+                  </el-dropdown-item>
+                  <el-dropdown-item @click="$router.push('/profile')">
+                    <el-icon><User /></el-icon>
+                    个人信息
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+
             <el-switch
               v-model="isDarkMode"
               class="theme-toggle-switch"
-              active-icon="moon"
-              inactive-icon="sunny"
+              active-icon="Moon"
+              inactive-icon="Sunny"
               size="small"
               @change="toggleTheme"
             />
@@ -60,7 +85,17 @@
 import { onMounted, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useGlobalStore } from "./store/global";
-import { ElMessage, ElConfigProvider, ElSwitch } from "element-plus";
+import {
+  ElMessage,
+  ElConfigProvider,
+  ElSwitch,
+  ElBadge,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
+  ElIcon,
+} from "element-plus";
+import { Moon, Sunny, ArrowDown, User } from "@element-plus/icons-vue";
 
 const globalStore = useGlobalStore();
 const route = useRoute();
@@ -97,8 +132,10 @@ onMounted(() => {
 });
 
 const isDarkMode = computed({
-  get() { return globalStore.theme === "dark"; },
-  set() {}
+  get() {
+    return globalStore.theme === "dark";
+  },
+  set() {},
 });
 
 const toggleTheme = () => {
@@ -147,7 +184,7 @@ const toggleTheme = () => {
 
 .user-info {
   font-size: 0.75rem;
-  color: #e5e7eb; 
+  color: #ffffff;
 }
 
 .theme-toggle-switch {
@@ -155,10 +192,10 @@ const toggleTheme = () => {
 }
 
 .app-menu .el-menu-item:hover {
-  background-color: var(--el-color-primary-light-3) 
+  background-color: var(--el-color-primary-light-3);
 }
 .app-menu .el-menu-item.is-active {
-  border-bottom-color: var(--el-color-warning) ;
+  border-bottom-color: var(--el-color-warning);
 }
 
 /* 主要内容区域 */
@@ -167,7 +204,7 @@ const toggleTheme = () => {
   background-color: var(--el-bg-color-page);
 }
 .main-content-wrapper {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   background-color: var(--el-bg-color-overlay);
   padding: 20px;
@@ -207,9 +244,6 @@ const toggleTheme = () => {
   color: #d1d5db; /* 灰白色文字 */
   border-top-color: #374151; /* 较深的边框 */
 }
-</style>
-
-<style>
 /* 全局暗色模式样式 */
 .dark body {
   background-color: #1a1a1a;

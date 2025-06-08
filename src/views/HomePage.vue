@@ -13,9 +13,7 @@
             <el-button :icon="Search" @click="fetchNewsData" />
           </template>
         </el-input>
-        <p v-if="searchTerm">
-          当前搜索: "{{ searchTerm }}"
-        </p>
+        <p v-if="searchTerm">当前搜索: "{{ searchTerm }}"</p>
       </el-col>
     </el-row>
 
@@ -24,7 +22,8 @@
       element-loading-text="正在加载新闻..."
       element-loading-spinner="el-icon-loading"
       element-loading-background="rgba(255, 255, 255, 0.7)"
-      class="news-list-area" style="min-height: 200px"
+      class="news-list-area"
+      style="min-height: 200px"
     >
       <el-empty
         v-if="!isLoading && filteredNews.length === 0 && !error"
@@ -147,7 +146,7 @@ provide(
 
 /* 新闻列表区域样式 */
 .news-list-area {
-  margin-top: 24px;  /* 添加上外边距 */
+  margin-top: 24px; /* 添加上外边距 */
   transition: opacity 0.3s ease; /* 平滑过渡加载状态 */
 }
 </style>
