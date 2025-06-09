@@ -16,18 +16,18 @@
         <el-divider />
         <div class="details-section">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="用户ID">{{
-              userProfile.userId
-            }}</el-descriptions-item>
-            <el-descriptions-item label="注册日期">{{
-              userProfile.registrationDate
-            }}</el-descriptions-item>
-            <el-descriptions-item label="所在城市">{{
-              userProfile.address.city
-            }}</el-descriptions-item>
-            <el-descriptions-item label="街道地址">{{
-              userProfile.address.street
-            }}</el-descriptions-item>
+            <el-descriptions-item label="用户ID">
+              {{ userProfile.userId }}
+            </el-descriptions-item>
+            <el-descriptions-item label="注册日期">
+              {{ userProfile.registrationDate }}
+            </el-descriptions-item>
+            <el-descriptions-item label="所在城市">
+              {{ userProfile.address.city }}
+            </el-descriptions-item>
+            <el-descriptions-item label="街道地址">
+              {{ userProfile.address.street }}
+            </el-descriptions-item>
             <el-descriptions-item label="个人简介">
               {{ userProfile.bio }}
             </el-descriptions-item>
@@ -53,6 +53,24 @@
               <el-statistic
                 title="获得点赞"
                 :value="userProfile.stats.likesReceived"
+              />
+            </el-col>
+            <el-col :span="8">
+              <el-statistic
+                title="发布文章"
+                :value="userProfile.stats.articlesPublished"
+              />
+            </el-col>
+            <el-col :span="8">
+              <el-statistic
+                title="粉丝数"
+                :value="userProfile.stats.followers"
+              />
+            </el-col>
+            <el-col :span="8">
+              <el-statistic
+                title="关注数"
+                :value="userProfile.stats.following"
               />
             </el-col>
           </el-row>

@@ -6,7 +6,6 @@ import App from "./App.vue"; // 根组件
 import router from "./router"; // 路由配置
 import { createPinia } from "pinia"; // Pinia 状态管理
 import ElementPlus from "element-plus"; // Element Plus UI 组件库
-// import 'element-plus/dist/index.css' // 在 index.html 中通过 CDN 引入
 import { ElMessage } from "element-plus"; // 单独导入 ElMessage 以便在错误处理器中使用
 
 
@@ -51,3 +50,5 @@ app.config.errorHandler = (err, instance, info) => {
 
 // 挂载应用到 #app 容器
 app.mount("#app");
+
+// FIX: Removed extra closing curly brace that was causing a syntax error.

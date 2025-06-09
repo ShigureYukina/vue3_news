@@ -11,9 +11,7 @@ import AboutPage from "../views/AboutPage.vue"; // 关于页面组件
 import FavoritesPage from "../views/FavoritesPage.vue"; // 收藏页面组件
 import DashboardPage from "../views/DashboardPage.vue"; // 数据大屏页面
 import NotFoundPage from "../views/NotFoundPage.vue"; // 404页面组件
-// --- 修复：移除了重复的 ProfilePage 导入 ---
 import ProfilePage from "../views/ProfilePage.vue"; // 个人信息页面
-
 // 定义路由规则
 const routes = [
   // 首页路由
