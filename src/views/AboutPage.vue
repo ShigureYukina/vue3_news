@@ -14,7 +14,7 @@
                 </p>
               </section>
 
-              <el-divider />
+              <el-divider/>
 
               <section>
                 <h2>平台特色</h2>
@@ -48,7 +48,7 @@
                 </ul>
               </section>
 
-              <el-divider />
+              <el-divider/>
 
               <section>
                 <h2>核心技术一览</h2>
@@ -57,53 +57,53 @@
                   <el-col :xs="12" :sm="6">
                     <el-card shadow="hover" class="tech-card">
                       <el-image
-                        src="https://vuejs.org/images/logo.png"
-                        alt="Vue 3 Logo"
-                        fit="contain"
-                        style="height: 50px; margin-bottom: 10px"
+                          src="https://vuejs.org/images/logo.png"
+                          alt="Vue 3 Logo"
+                          fit="contain"
+                          style="height: 50px; margin-bottom: 10px"
                       ></el-image>
-                      <p><strong>Vue 3</strong><br />渐进式 JavaScript 框架</p>
+                      <p><strong>Vue 3</strong><br/>渐进式 JavaScript 框架</p>
                     </el-card>
                   </el-col>
                   <el-col :xs="12" :sm="6">
                     <el-card shadow="hover" class="tech-card">
                       <el-image
-                        src="https://element-plus.org/images/element-plus-logo.svg"
-                        alt="Element Plus Logo"
-                        fit="contain"
-                        style="height: 50px; margin-bottom: 10px"
+                          src="https://element-plus.org/images/element-plus-logo.svg"
+                          alt="Element Plus Logo"
+                          fit="contain"
+                          style="height: 50px; margin-bottom: 10px"
                       ></el-image>
                       <p>
-                        <strong>Element Plus</strong><br />基于 Vue 3 的组件库
+                        <strong>Element Plus</strong><br/>基于 Vue 3 的组件库
                       </p>
                     </el-card>
                   </el-col>
                   <el-col :xs="12" :sm="6">
                     <el-card shadow="hover" class="tech-card">
                       <el-image
-                        src="https://pinia.vuejs.org/logo.svg"
-                        alt="Pinia Logo"
-                        fit="contain"
-                        style="height: 50px; margin-bottom: 10px"
+                          src="https://pinia.vuejs.org/logo.svg"
+                          alt="Pinia Logo"
+                          fit="contain"
+                          style="height: 50px; margin-bottom: 10px"
                       ></el-image>
-                      <p><strong>Pinia</strong><br />Vue 官方状态管理库</p>
+                      <p><strong>Pinia</strong><br/>Vue 官方状态管理库</p>
                     </el-card>
                   </el-col>
                   <el-col :xs="12" :sm="6">
                     <el-card shadow="hover" class="tech-card">
                       <el-image
-                        src="https://router.vuejs.org/logo.png"
-                        alt="Vue Router Logo"
-                        fit="contain"
-                        style="height: 50px; margin-bottom: 10px"
+                          src="https://router.vuejs.org/logo.png"
+                          alt="Vue Router Logo"
+                          fit="contain"
+                          style="height: 50px; margin-bottom: 10px"
                       ></el-image>
-                      <p><strong>Vue Router</strong><br />Vue.js 的官方路由</p>
+                      <p><strong>Vue Router</strong><br/>Vue.js 的官方路由</p>
                     </el-card>
                   </el-col>
                 </el-row>
               </section>
 
-              <el-divider />
+              <el-divider/>
             </div>
           </el-card>
         </el-col>
@@ -132,17 +132,9 @@ defineOptions({
   padding: 1rem 0;
 }
 
-.tech-stack-display .el-col {
-  margin-bottom: 16px;
-}
-
 .tech-card {
   text-align: center;
-  height: 100%; /* Make cards in a row same height */
+  height: 100%;
 }
-.tech-card .el-image {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
+
 </style>

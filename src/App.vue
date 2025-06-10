@@ -5,69 +5,157 @@
         <div class="container">
           <div class="logo-title" @click="$router.push('/')">新闻中心</div>
 
+          <!-- 导航菜单 -->
           <el-menu
-            mode="horizontal"
-            class="app-menu"
-            background-color="transparent"
-            text-color="#ffffff"
-            active-text-color="#ffd04b"
-            :ellipsis="false"
-            router
-            :default-active="activeRoute"
+              mode="horizontal"
+              class="app-menu"
+              background-color="transparent"
+              text-color="#ffffff"
+              active-text-color="#ffd04b"
+              :ellipsis="false"
+              router
+              :default-active="activeRoute"
           >
             <el-menu-item index="/">首页</el-menu-item>
             <el-menu-item index="/categories">分类</el-menu-item>
-            <el-menu-item index="/archived">缓存新闻</el-menu-item>
-            <el-menu-item index="/favorites">
+            <el-menu-item v-if="globalStore.isAuthenticated" index="/archived">
+              阅读历史
+            </el-menu-item>
+            <el-menu-item v-if="globalStore.isAuthenticated" index="/favorites">
               <div class="flex items-center">
                 <span>我的收藏</span>
                 <el-badge
-                  :value="globalStore.favoriteCount"
-                  :hidden="globalStore.favoriteCount === 0"
-                  class="ml-2"
+                    :value="globalStore.favoriteCount"
+                    :hidden="globalStore.favoriteCount === 0"
+                    class="ml-2"
                 />
               </div>
             </el-menu-item>
             <el-menu-item index="/about">关于</el-menu-item>
           </el-menu>
 
+          <!-- 用户信息区域 -->
           <div class="header-right">
-            <el-dropdown trigger="click">
+            <el-dropdown v-if="globalStore.isAuthenticated" trigger="click">
               <div class="user-info-dropdown">
-                <span style="color: #ffffff">ID: {{ globalStore.userId }}</span>
-                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                <!-- 使用用户名首字母作为默认头像 -->
+                <el-avatar
+                    :size="32"
+                    :src="globalStore.userAvatar || getDefaultAvatar()"
+                    style="margin-right: 10px;"
+                    @error="handleAvatarError"
+                >
+                  {{ getInitials() }}
+                </el-avatar>
+                <!-- 显示用户名 -->
+                <span style="color: #ffffff">{{ globalStore.username }}</span>
+                <el-icon class="el-icon--right">
+                  <arrow-down/>
+                </el-icon>
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item @click="$router.push('/dashboard')">
-                    <el-icon><DataLine /></el-icon>
+                  <el-dropdown-item v-if="globalStore.isAdmin" @click="$router.push('/dashboard')">
+                    <el-icon>
+                      <DataLine/>
+                    </el-icon>
                     数据大屏
                   </el-dropdown-item>
-                  <el-dropdown-item @click="$router.push('/profile')">
-                    <el-icon><User /></el-icon>
+                  <el-dropdown-item @click="$router.push(`/profile/${globalStore.userId}`)">
+                    <el-icon>
+                      <User/>
+                    </el-icon>
                     个人信息
+                  </el-dropdown-item>
+                  <el-dropdown-item divided @click="handleLogout">
+                    <el-icon>
+                      <SwitchButton/>
+                    </el-icon>
+                    登出
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
 
+            <div v-else class="user-info-dropdown" @click="showLoginModal = true">
+              <span style="color: #ffffff">游客 (请登录)</span>
+            </div>
+
+            <!-- 主题切换开关 -->
             <el-switch
-              v-model="isDarkMode"
-              class="theme-toggle-switch"
-              active-icon="Moon"
-              inactive-icon="Sunny"
-              size="small"
-              @change="toggleTheme"
+                v-model="isDarkMode"
+                class="theme-toggle-switch"
+                active-icon="Moon"
+                inactive-icon="Sunny"
+                size="small"
+                @change="toggleTheme"
             />
           </div>
         </div>
       </el-header>
 
+      <!-- 登录弹窗 -->
+      <el-dialog v-model="showLoginModal" title="登录 / 注册" width="500px" center>
+        <el-tabs v-model="isLogin" class="auth-tabs">
+          <el-tab-pane label="登录" name="true">
+            <el-form label-position="top" :model="loginForm">
+              <el-form-item label="用户名或邮箱">
+                <el-input v-model="loginForm.usernameOrEmail" placeholder="请输入用户名或邮箱" size="large"/>
+              </el-form-item>
+              <el-form-item label="密码">
+                <el-input v-model="loginForm.password" type="password" show-password placeholder="请输入密码"
+                          size="large"/>
+              </el-form-item>
+              <el-form-item label="验证码">
+                <div class="verify-code-container">
+                  <el-input v-model="loginForm.verifyCode" placeholder="请输入验证码" size="large"/>
+                  <VerifyCode v-model="correctCode" class="verify-code-img"/>
+                </div>
+              </el-form-item>
+              <el-button type="primary" @click="handleLogin" class="auth-button w-full">
+                立即登录
+              </el-button>
+              <div class="user-role-buttons">
+                <el-button @click="loginAsUser" class="role-button user mb-2">
+                  以普通用户身份登录
+                </el-button>
+              </div>
+              <div>
+                <el-button @click="loginAsAdmin" class="role-button admin mb-2">
+                  以管理员的身份登录
+                </el-button>
+              </div>
+            </el-form>
+          </el-tab-pane>
+          <el-tab-pane label="注册" name="false">
+            <el-form label-position="top" :model="registerForm">
+              <el-form-item label="用户名">
+                <el-input v-model="registerForm.username" placeholder="请输入用户名" size="large"/>
+              </el-form-item>
+              <el-form-item label="邮箱">
+                <el-input v-model="registerForm.email" placeholder="请输入邮箱" size="large"/>
+              </el-form-item>
+              <el-form-item label="密码">
+                <el-input v-model="registerForm.password" type="password" show-password placeholder="请输入密码"
+                          size="large"/>
+              </el-form-item>
+              <el-form-item label="确认密码">
+                <el-input v-model="registerForm.confirmPassword" type="password" show-password
+                          placeholder="请再次输入密码" size="large"/>
+              </el-form-item>
+              <el-button type="primary" @click="handleRegister" class="auth-button w-full">
+                立即注册
+              </el-button>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+      </el-dialog>
+
       <el-main class="app-main">
         <div class="main-content-wrapper">
           <router-view v-slot="{ Component }">
             <keep-alive include="HomePage,ArchivedNewsPage">
-              <component :is="Component" />
+              <component :is="Component"/>
             </keep-alive>
           </router-view>
         </div>
@@ -82,11 +170,12 @@
 </template>
 
 <script setup>
-import { onMounted, watch, computed } from "vue";
-import { useRoute } from "vue-router";
-import { useGlobalStore } from "./store/global";
+import {onMounted, watch, computed, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {useGlobalStore} from "./store/global";
 import {
   ElConfigProvider,
+  ElAvatar,
   ElSwitch,
   ElBadge,
   ElDropdown,
@@ -94,38 +183,146 @@ import {
   ElDropdownItem,
   ElIcon,
   ElNotification,
+  ElButton,
+  ElDialog
 } from "element-plus";
-import { Moon, Sunny, ArrowDown, User } from "@element-plus/icons-vue";
+import {ArrowDown, User, DataLine, SwitchButton} from "@element-plus/icons-vue";
+import VerifyCode from "./components/VerifyCode.vue";
+import {userService} from "./services/userService";
 
 const globalStore = useGlobalStore();
 const route = useRoute();
+const router = useRouter();
 const activeRoute = computed(() => route.path);
 
-watch(
-  () => globalStore.message,
-  (newMessage) => {
-    if (newMessage && newMessage.text) {
+// 控制登录弹窗显示
+const showLoginModal = ref(false);
+
+// 登录相关数据
+const isLogin = ref('true'); // 默认显示登录页
+const correctCode = ref('');
+const loginForm = ref({
+  usernameOrEmail: '',
+  password: '',
+  verifyCode: '',
+});
+const registerForm = ref({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+});
+
+// 模拟以特定角色登录的通用函数
+const loginAsRole = async (userId) => {
+  try {
+    const {data: userProfile} = await userService.getProfile(userId);
+    if (userProfile) {
+      globalStore.login(userProfile);
+      // 登录成功后跳转到首页
+      await router.push('/');
+    } else {
       ElNotification({
-        title: newMessage.type.charAt(0).toUpperCase() + newMessage.type.slice(1),
-        message: newMessage.text,
-        type: newMessage.type,
-        duration: 3000,
-        showClose: true,
+        title: '错误',
+        message: '获取用户信息失败',
+        type: 'error'
       });
-      globalStore.clearMessage();
     }
-  },
-  { deep: true }
+  } catch (error) {
+    console.error("登录失败:", error);
+    ElNotification({
+      title: '错误',
+      message: '登录过程中发生错误',
+      type: 'error'
+    });
+  }
+};
+
+// 模拟以普通用户身份登录 (userService 中 ID > 5 的为普通用户)
+const loginAsUser = async () => {
+  await loginAsRole(10); // 使用 ID 为 10 的用户作为普通用户示例
+  showLoginModal.value = false;
+};
+
+// 模拟以管理员身份登录 (userService 中 ID 1-5 的为管理员)
+const loginAsAdmin = async () => {
+  await loginAsRole(1); // 使用 ID 为 1 的用户作为管理员示例
+  showLoginModal.value = false;
+};
+
+// 处理登录提交
+const handleLogin = () => {
+  if (!loginForm.value.verifyCode) {
+    ElNotification({
+      title: '提示',
+      message: '请输入验证码',
+      type: 'warning'
+    });
+    return;
+  }
+  if (loginForm.value.verifyCode.toLowerCase() !== correctCode.value.toLowerCase()) {
+    ElNotification({
+      title: '错误',
+      message: '验证码不正确，请重试',
+      type: 'error'
+    });
+    return;
+  }
+  ElNotification({
+    title: '提示',
+    message: '此登录为模拟，请使用下方快捷按钮登录。',
+    type: 'info'
+  });
+};
+
+// 处理注册提交
+const handleRegister = () => {
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    ElNotification({
+      title: '错误',
+      message: '两次输入的密码不一致',
+      type: 'error'
+    });
+    return;
+  }
+  ElNotification({
+    title: '成功',
+    message: '注册成功（模拟）',
+    type: 'success'
+  });
+};
+
+watch(
+    () => globalStore.message,
+    (newMessage) => {
+      if (newMessage && newMessage.text) {
+        ElNotification({
+          title: newMessage.type.charAt(0).toUpperCase() + newMessage.type.slice(1),
+          message: newMessage.text,
+          type: newMessage.type,
+          duration: 3000,
+          showClose: true,
+        });
+        globalStore.clearMessage();
+      }
+    },
+    {deep: true}
 );
 
 onMounted(() => {
   console.log("根组件 App 已挂载");
-  if (globalStore.theme === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
+  globalStore.initTheme(); // 初始化主题
+
+  // 每次加载都清除登录状态
+  if (globalStore.isAuthenticated) {
+    globalStore.logout();
   }
-  globalStore.showMessage("欢迎来到 Vue.js 新闻中心 !", "success");
+
+  // 显示欢迎信息（如果需要）
+  if (!globalStore.message) {
+    globalStore.showMessage("欢迎来到 Vue.js 新闻中心 !", "success");
+  }
+
   const initialLoader = document.querySelector(".initial-loader-overlay");
   if (initialLoader) {
     initialLoader.style.display = "none";
@@ -136,20 +333,129 @@ const isDarkMode = computed({
   get() {
     return globalStore.theme === "dark";
   },
-  set() {},
+  set() {
+  },
 });
 
 const toggleTheme = () => {
   globalStore.toggleTheme();
 };
+
+const handleLogout = async () => {
+  globalStore.logout();
+  // After logout, redirect to the homepage
+  await router.push('/');
+};
+
+// 头像加载失败时的处理方法
+const handleAvatarError = (event) => {
+  console.warn('头像加载失败:', event);
+  // 可选：你可以在此处触发全局通知或提示
+};
+
+// 获取用户名首字母
+const getInitials = () => {
+  if (!globalStore.username) return 'U'; // 默认值
+  const nameParts = globalStore.username.split(' ');
+  return nameParts.length > 1
+      ? `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`
+      : globalStore.username.charAt(0);
+};
+
+// 获取默认头像颜色（可根据用户名生成固定颜色）
+const getDefaultAvatar = () => {
+  // 可选：实现基于用户名的颜色生成逻辑
+  return null; // 返回 null 以启用 el-avatar 的文字显示
+};
 </script>
 
 <style scoped>
-/* 根组件样式 */
-.app-el-container {
-  min-height: 100vh;
+
+
+/* 登录弹窗样式 */
+.auth-tabs {
+  :deep(.el-tabs__header) {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e4e4e4;
+  }
+
+  :deep(.el-tabs__item) {
+    color: #606266;
+    font-weight: 500;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+    border-bottom-color: var(--el-color-primary);
+  }
+}
+
+.verify-code-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.verify-code-img {
+  width: 170px;
+  height: 40px;
+}
+
+.auth-button {
+  width: 100%;
+  height: 45px;
+  font-size: 16px;
+  margin-top: 15px;
+  border-radius: 8px;
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.auth-button:hover {
+  background-color: var(--el-color-primary-light-5);
+  border-color: var(--el-color-primary-light-5);
+}
+
+.user-role-buttons {
+  margin-top: 20px;
+}
+
+.role-button {
+  width: 100%;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.role-button.user {
+  background-color: var(--el-color-primary);
+  color: #ffffff;
+}
+
+.role-button.admin {
+  background-color: var(--el-color-warning);
+  color: #ffffff;
+}
+
+.dark .auth-tabs {
+  :deep(.el-tabs__header) {
+    background-color: #1f2937;
+    border-bottom: 1px solid #374151;
+  }
+
+  :deep(.el-tabs__item) {
+    color: #d1d5db;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+    border-bottom-color: var(--el-color-primary);
+  }
+}
+
+.dark .verify-code-img {
+  background-color: #374151;
 }
 
 /* --- 页面头部布局 --- */
@@ -163,6 +469,10 @@ const toggleTheme = () => {
 .app-header .container {
   display: flex;
   align-items: center;
+  height: 100%;
+  margin: 0 auto;
+  max-width: 1280px; /* Or your preferred max-width */
+  padding: 0 20px;
 }
 
 .logo-title {
@@ -173,8 +483,9 @@ const toggleTheme = () => {
 }
 
 .app-menu {
-  margin-left: auto;
-  margin-right: auto;
+  flex-grow: 1;
+  justify-content: center;
+  border-bottom: none;
 }
 
 .header-right {
@@ -183,8 +494,10 @@ const toggleTheme = () => {
   white-space: nowrap;
 }
 
-.user-info {
-  font-size: 0.75rem;
+.user-info-dropdown {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
   color: #ffffff;
 }
 
@@ -192,20 +505,28 @@ const toggleTheme = () => {
   margin-left: 1rem;
 }
 
-.app-menu .el-menu-item:hover {
-  background-color: var(--el-color-primary-light-3);
+.app-menu .el-menu-item {
+  border-bottom: 2px solid transparent;
 }
+
+.app-menu .el-menu-item:hover {
+  background-color: var(--el-color-primary-light-3) !important;
+}
+
 .app-menu .el-menu-item.is-active {
-  border-bottom-color: var(--el-color-warning);
+  border-bottom-color: var(--el-color-warning) !important;
+  background-color: transparent !important;
 }
 
 /* 主要内容区域 */
 .app-main {
   flex-grow: 1;
+  padding: 20px;
   background-color: var(--el-bg-color-page);
 }
+
 .main-content-wrapper {
-  max-width: 1600px;
+  max-width: 1280px;
   margin: 0 auto;
   background-color: var(--el-bg-color-overlay);
   padding: 20px;
@@ -220,6 +541,7 @@ const toggleTheme = () => {
   color: var(--el-text-color-secondary);
   border-top: 1px solid var(--el-border-color-light);
 }
+
 .app-footer p {
   margin: 5px 0;
 }
@@ -244,31 +566,5 @@ const toggleTheme = () => {
   background-color: #1f2937; /* 深色背景 */
   color: #d1d5db; /* 灰白色文字 */
   border-top-color: #374151; /* 较深的边框 */
-}
-/* 全局暗色模式样式 */
-.dark body {
-  background-color: #1a1a1a;
-  color: #ffffff;
-}
-
-.dark .app-header {
-  background-color: #2c2c2c;
-  color: #ffffff;
-}
-
-.dark .app-main {
-  background-color: #1f1f1f;
-}
-
-.dark .main-content-wrapper {
-  background-color: #2a2a2a;
-  color: #ffffff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-
-.dark .app-footer {
-  background-color: #2c2c2c;
-  color: #bbbbbb;
-  border-top: 1px solid #444444;
 }
 </style>

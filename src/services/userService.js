@@ -14,6 +14,8 @@ const mockUserBaseData = (() => {
             userId: i,
             username: Mock.mock("@cname"), // 在创建时就固定用户名
             avatar: multiavatar(String(i)), // 根据ID生成固定、可复现的头像
+            // 新增：根据用户ID分配角色
+            role: i <= 5 ? 'admin' : 'user', // 假设ID 1-5 是管理员
         });
     }
     return users;
@@ -24,9 +26,9 @@ const userMap = new Map(mockUserBaseData.map((user) => [user.userId, user]));
 
 /**
  * ===== 核心改动 2: 导出一个可供其他服务使用的函数 =====
- * 根据用户ID获取固定的基础用户信息 (用户名、头像)
+ * 根据用户ID获取固定的基础用户信息 (用户名、头像、角色)
  * @param {string | number} userId
- * @returns {{userId: number, username: string, avatar: string}}
+ * @returns {{userId: number, username: string, avatar: string, role: string}}
  */
 export const getUserBaseById = (userId) => {
     const id = parseInt(userId, 10);
@@ -35,6 +37,7 @@ export const getUserBaseById = (userId) => {
             userId: id,
             username: "未知用户",
             avatar: multiavatar(String(id)),
+            role: 'user', // 默认角色
         }
     );
 };
@@ -51,7 +54,7 @@ const generateUserProfile = (userId) => {
     const baseUser = getUserBaseById(userId);
 
     return {
-        ...baseUser, // 展开固定的 userId, username, avatar
+        ...baseUser, // 展开固定的 userId, username, avatar, role
         // 以下是每次可以随机生成的、非关键识别信息
         email: R.email(),
         registrationDate: R.date("yyyy-MM-dd"),
@@ -65,8 +68,7 @@ const generateUserProfile = (userId) => {
             articlesRead: R.natural(10, 500),
             commentsMade: R.natural(5, 100),
             likesReceived: R.natural(50, 2000),
-            // 新增以下三行以生成发布文章数量、粉丝数和关注数
-            articlesPublished: R.natural(5, 300),
+            articlesPublished: R.natural(1, 30),
             followers: R.natural(100, 5000),
             following: R.natural(50, 1000),
         },
@@ -82,6 +84,7 @@ export const userService = {
         await new Promise((resolve) =>
             setTimeout(resolve, 100 + Math.random() * 300)
         );
+        // 使用缓存以确保每次获取的用户信息（如email）在会话中保持一致
         if (!userProfileCache[userId]) {
             userProfileCache[userId] = generateUserProfile(userId);
         }

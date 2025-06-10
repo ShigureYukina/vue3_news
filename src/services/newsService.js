@@ -1,6 +1,5 @@
 // src/services/newsService.js
 import Mock from "mockjs";
-import multiavatar from "@multiavatar/multiavatar";
 import {getUserBaseById} from "./userService";
 
 const R = Mock.Random; // Mock.Random 的别名，方便使用

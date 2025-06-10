@@ -2,20 +2,20 @@
   <div class="news-detail-page">
     <el-page-header @back="$router.back()"></el-page-header>
 
-    <el-skeleton :rows="10" animated v-if="isLoading" />
+    <el-skeleton :rows="10" animated v-if="isLoading"/>
 
     <el-alert
-      v-else-if="error"
-      :title="error"
-      type="error"
-      show-icon
-      :closable="false"
-      class="mb-4"
+        v-else-if="error"
+        :title="error"
+        type="error"
+        show-icon
+        :closable="false"
+        class="mb-4"
     />
 
     <article
-      v-else-if="article"
-      class="bg-white p-4 md:p-6 rounded-lg shadow-sm"
+        v-else-if="article"
+        class="bg-white p-4 md:p-6 rounded-lg shadow-sm"
     >
       <div class="mb-4">
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
@@ -27,146 +27,153 @@
         <el-tag type="info" size="small" class="mr-2 mb-1">
           分类:
           <router-link
-            :to="{
+              :to="{
               name: 'CategoryNews',
-              params: { categoryName: article.category },
+              params: { categoryName: article.category }
             }"
-            class="hover:underline"
+              class="hover:underline"
           >
             {{ article.category }}
           </router-link>
         </el-tag>
         <span class="mr-2 mb-1">发布日期: {{ formattedDate }}</span>
         <span class="mr-2 mb-1" v-if="article.author"
-          >作者: {{ article.author }}</span
+        >作者: {{ article.author }}</span
         >
         <span class="mb-1">阅读量: {{ article.views }}</span>
       </div>
 
       <el-image
-        v-if="article.imageUrl"
-        :src="article.imageUrl"
-        :alt="article.title"
-        fit="contain"
-        class="w-full max-h-96 object-cover rounded-lg shadow-md mb-6 bg-gray-100"
-        lazy
+          v-if="article.imageUrl"
+          :src="article.imageUrl"
+          :alt="article.title"
+          fit="contain"
+          class="w-full max-h-96 object-cover rounded-lg shadow-md mb-6 bg-gray-100"
+          lazy
       >
         <template #error>
           <div class="image-slot-error-detail">
-            <el-icon size="50"><Picture /></el-icon>
+            <el-icon size="50">
+              <Picture/>
+            </el-icon>
             <p>图片加载失败</p>
           </div>
         </template>
       </el-image>
 
       <div
-        class="prose max-w-none text-gray-700 leading-relaxed mb-8"
-        v-html="article.fullContent || article.content"
+          class="prose max-w-none text-gray-700 leading-relaxed mb-8"
+          v-html="article.fullContent || article.content"
       ></div>
 
-     <div class="interaction-bar">
+      <div class="interaction-bar">
         <el-button text @click="handleLike">
-          <el-icon><CaretTop /></el-icon>
+          <el-icon>
+            <CaretTop/>
+          </el-icon>
           <span>{{ article.likes + (isArticleLiked ? 1 : 0) }} 点赞</span>
         </el-button>
 
         <el-button text @click="toggleFavorite" :class="{ 'is-favorite': isArticleFavorite }">
           <el-icon>
-            <StarFilled v-if="isArticleFavorite" />
-            <Star v-else />
+            <StarFilled v-if="isArticleFavorite"/>
+            <Star v-else/>
           </el-icon>
           <span>{{ displayedFavorites }} 收藏</span>
         </el-button>
         <el-button text @click="openShareDialog">
-          <el-icon><Share /></el-icon>
+          <el-icon>
+            <Share/>
+          </el-icon>
           <span>{{ article.shares }} 分享</span>
         </el-button>
       </div>
 
 
-      <el-divider />
+      <el-divider/>
 
       <section class="mt-8">
         <h2 class="text-xl font-semibold text-gray-700 mb-4">评论区</h2>
         <el-form
-          :model="commentForm"
-          @submit.prevent="submitComment"
-          ref="commentFormRef"
+            :model="commentForm"
+            @submit.prevent="submitComment"
+            ref="commentFormRef"
         >
           <el-form-item prop="text">
             <el-input
-              v-model="commentForm.text"
-              type="textarea"
-              :rows="3"
-              placeholder="发表你的看法..."
-              show-word-limit
-              maxlength="200"
+                v-model="commentForm.text"
+                type="textarea"
+                :rows="3"
+                placeholder="发表你的看法..."
+                show-word-limit
+                maxlength="200"
             />
           </el-form-item>
           <el-form-item>
             <el-button
-              type="primary"
-              @click="submitComment"
-              :loading="submittingComment"
-              >提交评论</el-button
+                type="primary"
+                @click="submitComment"
+                :loading="submittingComment"
+            >提交评论
+            </el-button
             >
           </el-form-item>
         </el-form>
 
-      <div v-if="comments.length > 0" class="space-y-4 mt-6">
-  <el-card
-    v-for="comment in comments"
-    :key="comment.id"
-    shadow="never"
-    class="comment-card"
-  >
-    <p class="text-gray-800">{{ comment.content }}</p>
-    <div class="text-xs text-gray-500 mt-2 comment-meta">
-      <router-link
-        :to="{ name: 'Profile', params: { userId: comment.userId } }"
-        class="comment-author-link"
-      >
-        <div class="comment-avatar" v-html="comment.avatarSvg"></div>
-        <span class="comment-username">{{ comment.author }}</span>
-      </router-link>
-      <span class="comment-date">{{ comment.date }}</span>
-    </div>
-  </el-card>
-</div>
+        <div v-if="comments.length > 0" class="space-y-4 mt-6">
+          <el-card
+              v-for="comment in comments"
+              :key="comment.id"
+              shadow="never"
+              class="comment-card"
+          >
+            <p class="text-gray-800">{{ comment.content }}</p>
+            <div class="text-xs text-gray-500 mt-2 comment-meta">
+              <router-link
+                  :to="{ name: 'Profile', params: { userId: comment.userId } }"
+                  class="comment-author-link"
+              >
+                <div class="comment-avatar" v-html="comment.avatarSvg"></div>
+                <span class="comment-username">{{ comment.author }}</span>
+              </router-link>
+              <span class="comment-date">{{ comment.date }}</span>
+            </div>
+          </el-card>
+        </div>
         <el-empty
-          v-else
-          description="暂无评论，快来发表第一条评论吧！"
-          class="mt-6"
+            v-else
+            description="暂无评论，快来发表第一条评论吧！"
+            class="mt-6"
         />
       </section>
     </article>
   </div>
-      <el-dialog v-model="shareDialogVisible" title="分享这篇文章" width="500px">
-        <p class="mb-4">通过以下链接分享：</p>
-        <el-input :value="currentUrl" readonly>
-            <template #append>
-                <el-button @click="copyUrl">复制链接</el-button>
-            </template>
-        </el-input>
-    </el-dialog>
+  <el-dialog v-model="shareDialogVisible" title="分享这篇文章" width="500px">
+    <p class="mb-4">通过以下链接分享：</p>
+    <el-input :value="currentUrl" readonly>
+      <template #append>
+        <el-button @click="copyUrl">复制链接</el-button>
+      </template>
+    </el-input>
+  </el-dialog>
 </template>
 
 <script>
-import { mapStores } from "pinia";
-import { useGlobalStore } from "../store/global";
-import { newsService } from "../services/newsService";
-import { Picture, Star, StarFilled, Share, CaretTop } from "@element-plus/icons-vue";
+import {mapStores} from "pinia";
+import {useGlobalStore} from "@/store/global";
+import {newsService} from "@/services/newsService";
+import {Picture, Star, StarFilled, Share, CaretTop} from "@element-plus/icons-vue";
 
 export default {
   name: "NewsDetailPage",
-  components: { Picture, Star, StarFilled, Share, CaretTop },
+  components: {Picture, Star, StarFilled, Share, CaretTop},
   props: ["id"],
   data() {
     return {
       article: null,
       isLoading: true,
       error: null,
-      commentForm: { text: "" },
+      commentForm: {text: ""},
       comments: [],
       submittingComment: false,
       shareDialogVisible: false,
@@ -181,31 +188,28 @@ export default {
         month: "long",
         day: "numeric",
       });
-	  },
+    },
     displayedFavorites() {
       if (!this.article) return 0;
 
-      // 原始收藏数
       const baseFavorites = this.article.favorites || 0;
-      
-      // 我们假设从后端获取的收藏数不包含当前用户的本次操作
-      // 如果当前用户已收藏，则在原始基础上 +1
+
       return baseFavorites + (this.isArticleFavorite ? 1 : 0);
-	  },
-	  isArticleFavorite() {
+    },
+    isArticleFavorite() {
       if (!this.article) return false;
       return this.globalStore.isFavorite(this.article.id);
     },
     isArticleLiked() {
-        if (!this.article) return false;
-        return this.globalStore.isLiked(this.article.id);
+      if (!this.article) return false;
+      return this.globalStore.isLiked(this.article.id);
     },
     currentUrl() {
-        return window.location.href;
+      return window.location.href;
     }
 
   },
-  
+
   methods: {
     async fetchArticleData() {
       this.isLoading = true;
@@ -227,46 +231,57 @@ export default {
       }
     },
     handleLike() {
-        if (this.article) {
-            this.globalStore.toggleLike(this.article.id);
-        }
+      if (this.article) {
+        this.globalStore.toggleLike(this.article.id);
+      }
     },
     openShareDialog() {
       this.shareDialogVisible = true;
     },
     async submitComment() {
+       if (!this.globalStore.isAuthenticated) {
+        this.globalStore.showMessage("请先登录以发表评论", "warning");
+        this.$router.push('/auth'); // 跳转到登录页面
+        return;
+      }
+
       if (!this.commentForm.text.trim()) {
         this.globalStore.showMessage("评论内容不能为空!", "warning");
         return;
       }
+
+      // 获取当前用户信息
+      const username = this.globalStore.username || '用户';
+      const userAvatar = this.globalStore.userAvatar;
+
       this.submittingComment = true;
       await new Promise((resolve) => setTimeout(resolve, 500));
+
       this.comments.unshift({
         id: Date.now(),
-        author: "当前用户",
+        author: username,
         content: this.commentForm.text,
         date: new Date().toLocaleString("zh-CN"),
-        avatarSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#${Math.floor(
-          Math.random() * 16777215
-        )
-          .toString(16)
-          .padStart(6, "0")}"/></svg>`,
+        avatarUrl: userAvatar
+          ? userAvatar
+          : `data:image/svg+xml;base64,${btoa(generateUserInitialsSVG(username))}`,
       });
-      this.commentForm.text = "";
+
+      this.commentForm.text = '';
       this.globalStore.showMessage("评论已提交!", "success");
       this.submittingComment = false;
     },
     copyUrl() {
-        navigator.clipboard.writeText(this.currentUrl).then(() => {
-            this.globalStore.showMessage('链接已复制到剪贴板', 'success');
-            this.shareDialogVisible = false;
-        }).catch(err => {
-            console.error('复制失败: ', err);
-            this.globalStore.showMessage('复制失败，请手动复制', 'error');
-        });
+      navigator.clipboard.writeText(this.currentUrl).then(() => {
+        this.globalStore.showMessage('链接已复制到剪贴板', 'success');
+        this.shareDialogVisible = false;
+      }).catch(err => {
+        console.error('复制失败: ', err);
+        this.globalStore.showMessage('复制失败，请手动复制', 'error');
+      });
     }
   },
-  
+
   created() {
     this.fetchArticleData();
   },
@@ -291,7 +306,7 @@ export default {
 
 article.bg-white {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dark article.bg-white {
@@ -398,30 +413,29 @@ h1.text-2xl {
   border-color: #374151; /* 深色边框 */
 }
 
-/* ===== NEW/UPDATED STYLES ===== */
 .interaction-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #6b7280;
-    margin-top: 1.5rem;
-    padding: 0.5rem;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  margin-top: 1.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .dark .interaction-bar {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
 }
 
 .interaction-bar .el-button {
-    font-size: 0.9rem;
-    color: #606266;
-    flex-grow: 1; /* 让按钮平分空间 */
-    justify-content: center;
+  font-size: 0.9rem;
+  color: #606266;
+  flex-grow: 1; /* 让按钮平分空间 */
+  justify-content: center;
 }
 
 .dark .interaction-bar .el-button {
@@ -429,8 +443,8 @@ h1.text-2xl {
 }
 
 .interaction-bar .el-button .el-icon {
-    margin-right: 6px;
-    font-size: 1.1rem;
+  margin-right: 6px;
+  font-size: 1.1rem;
 }
 
 /* 已收藏状态的高亮样式 */
@@ -507,21 +521,26 @@ section.mt-8 h2.text-xl {
   .news-detail-page {
     padding: 0;
   }
+
   .el-page-header {
     border-radius: 0;
   }
+
   article.bg-white {
     padding: 1rem;
     border-radius: 0;
     box-shadow: none;
   }
+
   h1.text-2xl {
     font-size: 1.6rem;
   }
+
   .el-image.max-h-96 {
     max-height: 220px;
     margin-bottom: 1rem;
   }
+
   .prose {
     font-size: 0.95rem;
   }
@@ -536,6 +555,7 @@ section.mt-8 h2.text-xl {
   display: inline-block;
   vertical-align: middle;
 }
+
 .comment-meta {
   display: flex;
   align-items: center;

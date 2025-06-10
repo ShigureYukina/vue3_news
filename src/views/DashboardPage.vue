@@ -5,10 +5,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #e6f7ff; color: #1890ff"
+                class="kpi-icon"
+                style="background-color: #e6f7ff; color: #1890ff"
             >
-              <el-icon><Document /></el-icon>
+              <el-icon>
+                <Document/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">新闻总数</div>
@@ -21,10 +23,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #fffbe6; color: #faad14"
+                class="kpi-icon"
+                style="background-color: #fffbe6; color: #faad14"
             >
-              <el-icon><Collection /></el-icon>
+              <el-icon>
+                <Collection/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">总分类数</div>
@@ -37,10 +41,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #f6ffed; color: #52c41a"
+                class="kpi-icon"
+                style="background-color: #f6ffed; color: #52c41a"
             >
-              <el-icon><View /></el-icon>
+              <el-icon>
+                <View/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">总浏览量</div>
@@ -53,10 +59,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #e9e3ff; color: #722ed1"
+                class="kpi-icon"
+                style="background-color: #e9e3ff; color: #722ed1"
             >
-              <el-icon><Pointer /></el-icon>
+              <el-icon>
+                <Pointer/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">总点赞数</div>
@@ -69,10 +77,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #fff2e8; color: #fa541c"
+                class="kpi-icon"
+                style="background-color: #fff2e8; color: #fa541c"
             >
-              <el-icon><Star /></el-icon>
+              <el-icon>
+                <Star/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">总收藏数</div>
@@ -85,10 +95,12 @@
         <el-card shadow="hover">
           <div class="kpi-card">
             <div
-              class="kpi-icon"
-              style="background-color: #fff1f0; color: #f5222d"
+                class="kpi-icon"
+                style="background-color: #fff1f0; color: #f5222d"
             >
-              <el-icon><ChatLineSquare /></el-icon>
+              <el-icon>
+                <ChatLineSquare/>
+              </el-icon>
             </div>
             <div class="kpi-text">
               <div class="kpi-label">总评论数</div>
@@ -101,34 +113,34 @@
 
     <el-row :gutter="20">
       <el-col :span="12">
-        <ChartCard title="新闻分类占比" :option="categoryPieOption" />
+        <ChartCard title="新闻分类占比" :option="categoryPieOption"/>
       </el-col>
       <el-col :span="12">
-        <ChartCard title="各分类平均浏览量" :option="viewsBarOption" />
+        <ChartCard title="各分类平均浏览量" :option="viewsBarOption"/>
       </el-col>
     </el-row>
 
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="12">
         <ChartCard
-          title="各分类互动数据"
-          :option="interactionBarOption"
+            title="各分类互动数据"
+            :option="interactionBarOption"
         />
       </el-col>
-       <el-col :span="12">
+      <el-col :span="12">
         <ChartCard
-          title="新闻发布趋势 (近30天)"
-          :option="publicationLineOption"
+            title="新闻发布趋势 (近30天)"
+            :option="publicationLineOption"
         />
       </el-col>
     </el-row>
   </div>
-  <el-skeleton v-else :rows="10" animated />
+  <el-skeleton v-else :rows="10" animated/>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { newsService } from "@/services/newsService";
+import {ref, onMounted, computed} from "vue";
+import {newsService} from "@/services/newsService";
 import ChartCard from "@/components/ChartCard.vue";
 // ===== UPDATED: 导入新增图标 =====
 import {
@@ -149,8 +161,8 @@ const kpi = computed(() => {
   const totalLikes = allNews.value.reduce((sum, news) => sum + (news.likes || 0), 0);
   const totalFavorites = allNews.value.reduce((sum, news) => sum + (news.favorites || 0), 0);
   const totalComments = allNews.value.reduce(
-    (sum, news) => sum + (news.comments?.length || 0),
-    0
+      (sum, news) => sum + (news.comments?.length || 0),
+      0
   );
   const uniqueCategories = [
     ...new Set(allNews.value.map((news) => news.category)),
@@ -181,7 +193,7 @@ const categoryData = computed(() => {
 const categoryStats = computed(() => {
   const stats = allNews.value.reduce((acc, news) => {
     if (!acc[news.category]) {
-      acc[news.category] = { totalViews: 0, totalLikes: 0, totalFavorites: 0, count: 0 };
+      acc[news.category] = {totalViews: 0, totalLikes: 0, totalFavorites: 0, count: 0};
     }
     acc[news.category].totalViews += news.views || 0;
     acc[news.category].totalLikes += news.likes || 0;
@@ -222,18 +234,18 @@ const publicationTrendData = computed(() => {
 
 // 分类占比饼图配置
 const categoryPieOption = computed(() => ({
-  tooltip: { trigger: "item" },
-  legend: { top: "5%", left: "center" },
+  tooltip: {trigger: "item"},
+  legend: {top: "5%", left: "center"},
   series: [
     {
       name: "新闻分类",
       type: "pie",
       radius: ["40%", "70%"],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 10, borderColor: "#fff", borderWidth: 2 },
-      label: { show: false, position: "center" },
-      emphasis: { label: { show: true, fontSize: "20", fontWeight: "bold" } },
-      labelLine: { show: false },
+      itemStyle: {borderRadius: 10, borderColor: "#fff", borderWidth: 2},
+      label: {show: false, position: "center"},
+      emphasis: {label: {show: true, fontSize: "20", fontWeight: "bold"}},
+      labelLine: {show: false},
       data: categoryData.value,
     },
   ],
@@ -241,12 +253,12 @@ const categoryPieOption = computed(() => ({
 
 // 平均浏览量条形图配置
 const viewsBarOption = computed(() => ({
-  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+  tooltip: {trigger: "axis", axisPointer: {type: "shadow"}},
   xAxis: {
     type: "category",
-    data: categoryStats.value.map((item) => item.name).sort((a,b) => b.avgViews - a.avgViews),
+    data: categoryStats.value.map((item) => item.name).sort((a, b) => b.avgViews - a.avgViews),
   },
-  yAxis: { type: "value" },
+  yAxis: {type: "value"},
   series: [
     {
       name: "平均浏览量",
@@ -258,25 +270,25 @@ const viewsBarOption = computed(() => ({
 
 // ===== NEW: 各分类互动数据条形图配置 =====
 const interactionBarOption = computed(() => ({
-  tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-  legend: { data: ['平均点赞数', '平均收藏数'] },
+  tooltip: {trigger: "axis", axisPointer: {type: "shadow"}},
+  legend: {data: ['平均点赞数', '平均收藏数']},
   xAxis: {
     type: 'category',
     data: categoryStats.value.map(item => item.name),
   },
-  yAxis: { type: 'value' },
+  yAxis: {type: 'value'},
   series: [
     {
       name: '平均点赞数',
       type: 'bar',
       data: categoryStats.value.map(item => item.avgLikes),
-      itemStyle: { color: '#722ed1' }
+      itemStyle: {color: '#722ed1'}
     },
     {
       name: '平均收藏数',
       type: 'bar',
       data: categoryStats.value.map(item => item.avgFavorites),
-      itemStyle: { color: '#fa541c' }
+      itemStyle: {color: '#fa541c'}
     }
   ]
 }));
@@ -284,13 +296,13 @@ const interactionBarOption = computed(() => ({
 
 // 发布趋势折线图配置
 const publicationLineOption = computed(() => ({
-  tooltip: { trigger: "axis" },
+  tooltip: {trigger: "axis"},
   xAxis: {
     type: "category",
     boundaryGap: false,
     data: publicationTrendData.value.dates.map((d) => d.substring(5)),
   },
-  yAxis: { type: "value" },
+  yAxis: {type: "value"},
   series: [
     {
       name: "发布数量",
@@ -318,13 +330,16 @@ onMounted(async () => {
   padding: 20px;
   background-color: #f0f2f5;
 }
+
 .kpi-row {
   margin-bottom: 20px;
 }
+
 .kpi-card {
   display: flex;
   align-items: center;
 }
+
 .kpi-icon {
   font-size: 2rem;
   padding: 1rem;
@@ -334,10 +349,12 @@ onMounted(async () => {
   justify-content: center;
   margin-right: 1rem;
 }
+
 .kpi-text .kpi-label {
   font-size: 0.9rem;
   color: var(--el-text-color-secondary);
 }
+
 .kpi-text .kpi-value {
   font-size: 1.5rem;
   font-weight: bold;

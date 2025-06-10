@@ -5,14 +5,14 @@
         <span>{{ title }}</span>
       </div>
     </template>
-    <v-chart class="chart" :option="option" autoresize />
+    <v-chart class="chart" :option="option" autoresize/>
   </el-card>
 </template>
 
 <script setup>
-import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
-import { PieChart, BarChart, LineChart } from "echarts/charts";
+import {use} from "echarts/core";
+import {CanvasRenderer} from "echarts/renderers";
+import {PieChart, BarChart, LineChart} from "echarts/charts";
 import {
   TitleComponent,
   TooltipComponent,
@@ -20,7 +20,7 @@ import {
   GridComponent,
 } from "echarts/components";
 import VChart from "vue-echarts";
-import { defineProps } from "vue";
+import {defineProps} from "vue";
 
 use([
   CanvasRenderer,
@@ -49,9 +49,11 @@ defineProps({
 .chart-card {
   height: 400px;
 }
+
 .chart {
   height: 320px;
 }
+
 .card-header span {
   font-weight: bold;
   font-size: 1.1rem;
