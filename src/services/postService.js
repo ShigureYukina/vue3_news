@@ -142,4 +142,27 @@ export const postService = {
 
         return {data: categories};
     },
+
+    // 新增：获取公告方法
+    async getAnnouncements() {
+        // 模拟网络延迟
+        await new Promise((resolve) =>
+            setTimeout(resolve, 200 + Math.random() * 300)
+        );
+
+        // 随机生成公告
+        mockPostDataStore.some(item => item.isAnnouncement);
+        const announcementCategories = ["系统公告", "活动通知", "规则调整", "节日祝福", "维护通知"];
+        const randomAnnouncements = Mock.mock({
+            "list|3": [{
+                id: () => Mock.Random.guid(),
+                title: () => Mock.Random.pick(announcementCategories) + ' - ' + Mock.Random.csentence(1, 5),
+                date: () => Mock.Random.date('yyyy-MM-dd'),
+                content: () => Mock.Random.cparagraph(1)
+            }]
+        }).list;
+
+        return {data: randomAnnouncements};
+    }
+
 };

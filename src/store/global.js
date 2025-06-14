@@ -1,5 +1,3 @@
-// store/global.js
-
 import {defineStore} from "pinia";
 
 // 创建并导出全局状态存储
@@ -20,6 +18,8 @@ export const useGlobalStore = defineStore("global", {
         favoritePostIds: [],
         // 点赞的帖子ID列表
         likedPostIds: [],
+        // 新增：点赞的评论ID列表
+        likedCommentIds: [],
         // 新增: 控制登录弹窗显示
         showLoginModal: false,
     }),
@@ -51,6 +51,7 @@ export const useGlobalStore = defineStore("global", {
         favoritePost: (state) => state.cachedPost.filter((Post) => state.favoritePostIds.includes(Post.id)),
         favoriteCount: (state) => state.favoritePostIds.length,
         isLiked: (state) => (PostId) => state.likedPostIds.includes(PostId),
+        isCommentLiked: (state) => (commentId) => state.likedCommentIds.includes(commentId),
     },
 
     // 动作方法
@@ -61,7 +62,7 @@ export const useGlobalStore = defineStore("global", {
             if (!userData || !userData.userId || !userData.username) {
                 throw new Error('Invalid user data');
             }
-            
+
             this.currentUser = userData;
             sessionStorage.setItem("currentUser", JSON.stringify(userData)); // 使用 sessionStorage 保持会话
             this.showMessage(`欢迎回来, ${userData.username}!`, "success");
@@ -139,9 +140,18 @@ export const useGlobalStore = defineStore("global", {
                 this.showMessage("点赞成功！", "success");
             }
         },
+        // 新增：切换评论点赞状态
+        toggleCommentLike(commentId) {
+            const index = this.likedCommentIds.indexOf(commentId);
+            if (index > -1) {
+                this.likedCommentIds.splice(index, 1);
+            } else {
+                this.likedCommentIds.push(commentId);
+            }
+        },
         // 新增: 设置登录弹窗显示状态
         setShowLoginModal(visible) {
-          this.showLoginModal = visible;
+            this.showLoginModal = visible;
         },
     },
 });

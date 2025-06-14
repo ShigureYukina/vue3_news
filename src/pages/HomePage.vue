@@ -1,5 +1,6 @@
 <template>
   <div class="homepage-container">
+
     <el-row justify="center" class="search-bar">
       <el-col :xs="24" :sm="18" :md="12">
         <el-input
@@ -16,7 +17,7 @@
         </el-input>
       </el-col>
     </el-row>
-
+    <announcement/>
     <div
         v-loading="isLoading"
         element-loading-text="正在加载帖子..."
@@ -63,11 +64,11 @@
 <script setup>
 import {ref, watch, onMounted} from "vue";
 import {useRouter} from "vue-router";
-// 确保引用的是最新的 postService
 import {postService} from "@/services/postService";
 import {useGlobalStore} from "@/store/global";
 import PostListItem from "../components/PostListItem.vue";
 import {Search} from "@element-plus/icons-vue";
+import Announcement from "@/components/Announcement.vue";
 
 defineOptions({name: "HomePage"});
 const props = defineProps({category: String});

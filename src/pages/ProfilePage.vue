@@ -1,6 +1,8 @@
 <template>
   <div class="profile-page">
-    <el-skeleton :rows="8" animated v-if="loading"/>
+    <el-page-header class="page-header" @back="$router.back()">
+    </el-page-header>
+    <el-skeleton :rows="10" animated v-if="isLoading"/>
     <el-card v-else-if="userProfile" class="profile-card" shadow="always">
       <template #header>
         <div class="card-header">

@@ -14,7 +14,7 @@
       </el-main>
 
       <el-footer class="app-footer text-center" height="auto">
-        <p>&copy; {{ new Date().getFullYear() }} Vue.js 帖子展示.</p>
+        <p>&copy; {{ new Date().getFullYear() }} Vue.js 新闻展示.</p>
         <p class="text-sm">这是一个用于演示 Vue.js 功能的示例网站。</p>
       </el-footer>
     </el-container>

@@ -2,15 +2,16 @@
 // 路由配置文件，定义应用的所有路由规则和导航行为
 
 import {createRouter, createWebHashHistory} from "vue-router";
-import HomePage from "../views/HomePage.vue"; // 首页组件
-import NewsDetailPage from "../views/PostDetailPage.vue"; // 帖子详情页面组件
-import CategoriesPage from "../views/CategoriesPage.vue"; // 分类页面组件
-import ArchivedNewsPage from "../views/HistoryPage.vue"; // 缓存帖子页面组件
-import AboutPage from "../views/AboutPage.vue"; // 关于页面组件
-import FavoritesPage from "../views/FavoritesPage.vue"; // 收藏页面组件
-import DashboardPage from "../views/DashboardPage.vue"; // 数据大屏页面
-import NotFoundPage from "../views/NotFoundPage.vue"; // 404页面组件
-import ProfilePage from "../views/ProfilePage.vue"; // 个人信息页面
+import HomePage from "../pages/HomePage.vue"; // 首页组件
+import NewsDetailPage from "../pages/PostDetailPage.vue"; // 帖子详情页面组件
+import CategoriesPage from "../pages/CategoriesPage.vue"; // 分类页面组件
+import HistoryPage from "../pages/HistoryPage.vue"; // 缓存帖子页面组件
+import AboutPage from "../pages/AboutPage.vue"; // 关于页面组件
+import FavoritesPage from "../pages/FavoritesPage.vue"; // 收藏页面组件
+import DashboardPage from "../pages/DashboardPage.vue"; // 数据大屏页面
+import NotFoundPage from "../pages/NotFoundPage.vue"; // 404页面组件
+import ProfilePage from "../pages/ProfilePage.vue"; // 个人信息页面
+import CreatePostPage from "@/pages/CreatePostPage.vue";
 
 // 定义路由规则
 const routes = [
@@ -41,10 +42,10 @@ const routes = [
     },
     // 缓存帖子路由
     {
-        path: "/archived",
-        name: "ArchivedNews",
-        component: ArchivedNewsPage,
-        meta: {title: "缓存帖子"},
+        path: "/History",
+        name: "HistoryRead",
+        component: HistoryPage,
+        meta: {title: "历史记录"},
     },
     // 动态演示页面路由
     // 收藏页面路由
@@ -74,6 +75,12 @@ const routes = [
         name: "About",
         component: AboutPage,
         meta: {title: "关于我们"},
+    },
+    {
+        path: '/create-post',
+        name: 'CreatePost',
+        component: CreatePostPage,
+        meta: {title: "发布帖子"}
     },
     // 首页重定向
     {path: "/home", redirect: "/"},
