@@ -7,32 +7,32 @@
         </template>
       </el-page-header>
 
-      <div v-if="favoriteNews.length > 0" class="news-list-grid">
-        <!-- 为了方便，我们直接在这里渲染卡片，您也可以继续使用 NewsCard 组件 -->
+      <div v-if="favoritePost.length > 0" class="Post-list-grid">
+        <!-- 为了方便，我们直接在这里渲染卡片，您也可以继续使用 PostCard 组件 -->
         <el-card
-            v-for="news in favoriteNews"
-            :key="news.id"
+            v-for="Post in favoritePost"
+            :key="Post.id"
             shadow="hover"
-            class="news-card"
+            class="Post-card"
         >
           <template #header>
             <div class="card-header">
-              <router-link :to="`/news/${news.id}`" class="news-title-link">{{
-                  news.title
+              <router-link :to="`/Post/${Post.id}`" class="Post-title-link">{{
+                  Post.title
                 }}
               </router-link>
               <el-button
                   circle
-                  :type="store.isFavorite(news.id) ? 'warning' : 'info'"
+                  :type="store.isFavorite(Post.id) ? 'warning' : 'info'"
                   :icon="Star"
-                  @click.stop="store.toggleFavorite(news.id)"
+                  @click.stop="store.toggleFavorite(Post.id)"
               />
             </div>
           </template>
-          <p class="news-content">{{ news.content }}</p>
+          <p class="Post-content">{{ Post.content }}</p>
           <div class="card-footer">
-            <time class="time">{{ news.date }}</time>
-            <el-tag size="small">{{ news.category }}</el-tag>
+            <time class="time">{{ Post.date }}</time>
+            <el-tag size="small">{{ Post.category }}</el-tag>
           </div>
         </el-card>
       </div>
@@ -51,7 +51,7 @@ const store = useGlobalStore();
 const router = useRouter();
 
 // 从 store 中获取收藏的新闻列表和数量
-const favoriteNews = computed(() => store.favoriteNews);
+const favoritePost = computed(() => store.favoritePost);
 const favoriteCount = computed(() => store.favoriteCount);
 
 const goBack = () => {
@@ -68,17 +68,17 @@ const goBack = () => {
   margin-bottom: 24px;
 }
 
-.news-list-grid {
+.Post-list-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
-.news-card {
+.Post-card {
   transition: all 0.3s ease;
 }
 
-.news-card:hover {
+.Post-card:hover {
   transform: translateY(-5px);
 }
 
@@ -88,17 +88,17 @@ const goBack = () => {
   align-items: center;
 }
 
-.news-title-link {
+.Post-title-link {
   color: var(--el-text-color-primary);
   text-decoration: none;
   font-weight: bold;
 }
 
-.news-title-link:hover {
+.Post-title-link:hover {
   color: var(--el-color-primary);
 }
 
-.news-content {
+.Post-content {
   font-size: 14px;
   color: var(--el-text-color-regular);
   line-height: 1.6;

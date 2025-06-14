@@ -1,11 +1,11 @@
-// src/services/newsService.js
+// src/services/postService.js
 import Mock from "mockjs";
 import {getUserBaseById} from "./userService";
 
 const R = Mock.Random; // Mock.Random 的别名，方便使用
 
-// --- 生成单条新闻数据的辅助函数 ---
-const generateSingleNewsItem = (id, specifiedCategory) => {
+// --- 生成单条帖子数据的辅助函数 ---
+const generateSinglePostItem = (id, specifiedCategory) => {
     const categories = [
         "技术",
         "游戏",
@@ -16,7 +16,7 @@ const generateSingleNewsItem = (id, specifiedCategory) => {
         "健康",
         "旅游",
         "时政",
-    ]; // 新闻分类示例
+    ]; // 帖子分类示例
     const title = Mock.mock("@ctitle(8, 20)"); // 中文标题，8到20个字
     return {
         id: id,
@@ -61,29 +61,29 @@ const generateSingleNewsItem = (id, specifiedCategory) => {
     };
 };
 
-// --- 为当前会话生成一组固定的模拟新闻数据 ---
-const TOTAL_NEWS_ITEMS = Math.floor(Math.random() * 10) + 20; // 生成20-30之间的随机数量
-const mockNewsDataStore = (() => {
+// --- 为当前会话生成一组固定的模拟帖子数据 ---
+const TOTAL_Post_ITEMS = Math.floor(Math.random() * 10) + 20; // 生成20-30之间的随机数量
+const mockPostDataStore = (() => {
     const data = [];
-    for (let i = 0; i < TOTAL_NEWS_ITEMS; i++) {
-        data.push(generateSingleNewsItem(i + 1)); // ID 从 1 开始
+    for (let i = 0; i < TOTAL_Post_ITEMS; i++) {
+        data.push(generateSinglePostItem(i + 1)); // ID 从 1 开始
     }
     return data;
 })();
 
-export const newsService = {
-    async getNews(params = {}) {
-        console.log("Fetching news with params (Mock.js):", params);
+export const postService = {
+    async getPost(params = {}) {
+        console.log("Fetching Post with params (Mock.js):", params);
         // 模拟网络延迟
         await new Promise((resolve) =>
             setTimeout(resolve, 100 + Math.random() * 500)
         );
 
-        let newsToReturn = [...mockNewsDataStore]; // 从完整数据存储中复制一份开始
+        let PostToReturn = [...mockPostDataStore]; // 从完整数据存储中复制一份开始
 
         // 如果有分类参数，则按分类过滤
         if (params.category) {
-            newsToReturn = newsToReturn.filter(
+            PostToReturn = PostToReturn.filter(
                 (item) => item.category === params.category
             );
         }
@@ -91,25 +91,25 @@ export const newsService = {
         // 如果有搜索词参数，则按搜索词过滤 (标题、内容简介、完整内容)
         if (params.searchTerm) {
             const term = params.searchTerm.toLowerCase();
-            newsToReturn = newsToReturn.filter(
+            PostToReturn = PostToReturn.filter(
                 (item) =>
                     item.title.toLowerCase().includes(term) ||
                     item.content.toLowerCase().includes(term) ||
                     item.fullContent.toLowerCase().includes(term)
             );
         }
-        return {data: newsToReturn};
+        return {data: PostToReturn};
     },
 
-    async getNewsById(id) {
+    async getPostById(id) {
         const articleId = parseInt(id);
-        console.log(`Fetching news by id (Mock.js): ${articleId}`); // (修正了拼写错误)
+        console.log(`Fetching Post by id (Mock.js): ${articleId}`); // (修正了拼写错误)
         // 模拟网络延迟
         await new Promise((resolve) =>
             setTimeout(resolve, 150 + Math.random() * 300)
         );
 
-        const article = mockNewsDataStore.find((item) => item.id === articleId);
+        const article = mockPostDataStore.find((item) => item.id === articleId);
 
         if (article) {
             // 模拟浏览量增加 (直接修改存储中的数据，以便效果持久)
@@ -117,7 +117,7 @@ export const newsService = {
             return {data: {...article}}; // 返回文章数据的副本
         } else {
             return Promise.reject({
-                response: {status: 404, data: {message: "新闻未找到 (Mock.js)"}},
+                response: {status: 404, data: {message: "帖子未找到 (Mock.js)"}},
             });
         }
     },
@@ -129,9 +129,9 @@ export const newsService = {
             setTimeout(resolve, 100 + Math.random() * 200)
         );
 
-        // 从模拟新闻数据中提取分类及其数量
-        const categoryCounts = mockNewsDataStore.reduce((acc, newsItem) => {
-            acc[newsItem.category] = (acc[newsItem.category] || 0) + 1;
+        // 从模拟帖子数据中提取分类及其数量
+        const categoryCounts = mockPostDataStore.reduce((acc, PostItem) => {
+            acc[PostItem.category] = (acc[PostItem.category] || 0) + 1;
             return acc;
         }, {});
 

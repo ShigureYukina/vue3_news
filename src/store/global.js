@@ -11,21 +11,31 @@ export const useGlobalStore = defineStore("global", {
         // 消息状态，用于在App.vue中显示提示信息
         message: null, // { text: String, type: String }
         // 主题设置
-        theme: localStorage.getItem("news-app-theme") || "light",
-        // 已读新闻ID列表
-        readNewsIds: [],
-        // 缓存新闻列表
-        cachedNews: [],
-        // 收藏的新闻ID列表
-        favoriteNewsIds: [],
-        // 点赞的新闻ID列表
-        likedNewsIds: [],
+        theme: localStorage.getItem("Post-app-theme") || "light",
+        // 已读帖子ID列表
+        readPostIds: [],
+        // 缓存帖子列表
+        cachedPost: [],
+        // 收藏的帖子ID列表
+        favoritePostIds: [],
+        // 点赞的帖子ID列表
+        likedPostIds: [],
+        // 新增: 控制登录弹窗显示
+        showLoginModal: false,
     }),
 
     // Getters 用于派生状态
     getters: {
-        // 新增: 用户是否已登录
-        isAuthenticated: (state) => !!state.currentUser,
+        // 新增: 用户是否已登录（经过有效性验证）
+        isAuthenticated: (state) => {
+            // 验证用户对象的基本结构
+            return !!(state.currentUser && state.currentUser.userId && state.currentUser.username);
+        },
+        // 新增: 检查用户会话是否有效
+        isSessionValid: (state) => {
+            // 这里可以添加更复杂的验证逻辑，如检查token过期时间等
+            return !!(state.currentUser && state.currentUser.userId && state.currentUser.username);
+        },
         // 新增: 当前用户是否是管理员
         isAdmin: (state) => state.currentUser?.role === 'admin',
         // 新增: 获取当前用户ID
@@ -34,17 +44,24 @@ export const useGlobalStore = defineStore("global", {
         userAvatar: (state) => state.currentUser?.avatar,
         // 新增: 获取当前用户名
         username: (state) => state.currentUser?.username || '游客',
+        // 新增: 获取登录弹窗显示状态
+        isLoginModalVisible: (state) => state.showLoginModal,
 
-        isFavorite: (state) => (newsId) => state.favoriteNewsIds.includes(newsId),
-        favoriteNews: (state) => state.cachedNews.filter((news) => state.favoriteNewsIds.includes(news.id)),
-        favoriteCount: (state) => state.favoriteNewsIds.length,
-        isLiked: (state) => (newsId) => state.likedNewsIds.includes(newsId),
+        isFavorite: (state) => (PostId) => state.favoritePostIds.includes(PostId),
+        favoritePost: (state) => state.cachedPost.filter((Post) => state.favoritePostIds.includes(Post.id)),
+        favoriteCount: (state) => state.favoritePostIds.length,
+        isLiked: (state) => (PostId) => state.likedPostIds.includes(PostId),
     },
 
     // 动作方法
     actions: {
         // 新增: 用户登录
         login(userData) {
+            // 验证用户数据的有效性
+            if (!userData || !userData.userId || !userData.username) {
+                throw new Error('Invalid user data');
+            }
+            
             this.currentUser = userData;
             sessionStorage.setItem("currentUser", JSON.stringify(userData)); // 使用 sessionStorage 保持会话
             this.showMessage(`欢迎回来, ${userData.username}!`, "success");
@@ -65,22 +82,22 @@ export const useGlobalStore = defineStore("global", {
         toggleTheme() {
             this.theme = this.theme === "light" ? "dark" : "light";
             document.documentElement.classList.toggle("dark", this.theme === "dark");
-            localStorage.setItem("news-app-theme", this.theme);
+            localStorage.setItem("Post-app-theme", this.theme);
             this.showMessage(`主题已切换为 ${this.theme === "light" ? "明亮" : "暗黑"}模式`);
         },
         initTheme() {
             document.documentElement.classList.toggle("dark", this.theme === "dark");
         },
-        markNewsAsRead(newsId) {
-            if (!this.readNewsIds.includes(newsId)) {
-                this.readNewsIds.push(newsId);
+        markPostAsRead(PostId) {
+            if (!this.readPostIds.includes(PostId)) {
+                this.readPostIds.push(PostId);
             }
         },
-        isNewsRead(newsId) {
-            return this.readNewsIds.includes(newsId);
+        isPostRead(PostId) {
+            return this.readPostIds.includes(PostId);
         },
-        addCachedNews(news) {
-            const newsToAdd = Array.isArray(news) ? news : [news];
+        addCachedPost(Post) {
+            const PostToAdd = Array.isArray(Post) ? Post : [Post];
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -89,38 +106,42 @@ export const useGlobalStore = defineStore("global", {
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}`;
 
-            newsToAdd.forEach((n) => {
-                if (n && n.id && !this.cachedNews.some((item) => item.id === n.id)) {
-                    const newsWithTimestamp = {
+            PostToAdd.forEach((n) => {
+                if (n && n.id && !this.cachedPost.some((item) => item.id === n.id)) {
+                    const PostWithTimestamp = {
                         ...n,
                         cachedAt: formattedTime,
                     };
 
-                    this.cachedNews.push(newsWithTimestamp);
+                    this.cachedPost.push(PostWithTimestamp);
                 }
             });
         },
-        getCachedNews() {
-            return this.cachedNews;
+        getCachedPost() {
+            return this.cachedPost;
         },
-        toggleFavorite(newsId) {
-            const index = this.favoriteNewsIds.indexOf(newsId);
+        toggleFavorite(PostId) {
+            const index = this.favoritePostIds.indexOf(PostId);
             if (index > -1) {
-                this.favoriteNewsIds.splice(index, 1);
+                this.favoritePostIds.splice(index, 1);
                 this.showMessage("已取消收藏", "warning");
             } else {
-                this.favoriteNewsIds.push(newsId);
+                this.favoritePostIds.push(PostId);
                 this.showMessage("收藏成功", "success");
             }
         },
-        toggleLike(newsId) {
-            const index = this.likedNewsIds.indexOf(newsId);
+        toggleLike(PostId) {
+            const index = this.likedPostIds.indexOf(PostId);
             if (index > -1) {
-                this.likedNewsIds.splice(index, 1);
+                this.likedPostIds.splice(index, 1);
             } else {
-                this.likedNewsIds.push(newsId);
+                this.likedPostIds.push(PostId);
                 this.showMessage("点赞成功！", "success");
             }
+        },
+        // 新增: 设置登录弹窗显示状态
+        setShowLoginModal(visible) {
+          this.showLoginModal = visible;
         },
     },
 });

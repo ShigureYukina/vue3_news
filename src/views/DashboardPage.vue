@@ -13,8 +13,8 @@
               </el-icon>
             </div>
             <div class="kpi-text">
-              <div class="kpi-label">新闻总数</div>
-              <div class="kpi-value">{{ kpi.totalNews }}</div>
+              <div class="kpi-label">帖子总数</div>
+              <div class="kpi-value">{{ kpi.totalPost }}</div>
             </div>
           </div>
         </el-card>
@@ -113,7 +113,7 @@
 
     <el-row :gutter="20">
       <el-col :span="12">
-        <ChartCard title="新闻分类占比" :option="categoryPieOption"/>
+        <ChartCard title="帖子分类占比" :option="categoryPieOption"/>
       </el-col>
       <el-col :span="12">
         <ChartCard title="各分类平均浏览量" :option="viewsBarOption"/>
@@ -129,7 +129,7 @@
       </el-col>
       <el-col :span="12">
         <ChartCard
-            title="新闻发布趋势 (近30天)"
+            title="帖子发布趋势 (近30天)"
             :option="publicationLineOption"
         />
       </el-col>
@@ -140,7 +140,7 @@
 
 <script setup>
 import {ref, onMounted, computed} from "vue";
-import {newsService} from "@/services/newsService";
+import {postService} from "@/services/postService";
 import ChartCard from "@/components/ChartCard.vue";
 // ===== UPDATED: 导入新增图标 =====
 import {
@@ -152,23 +152,23 @@ import {
   Star,
 } from "@element-plus/icons-vue";
 
-const allNews = ref([]);
+const allPost = ref([]);
 const loading = ref(true);
 
 // ===== UPDATED: 在KPI计算中增加点赞和收藏 =====
 const kpi = computed(() => {
-  const totalViews = allNews.value.reduce((sum, news) => sum + news.views, 0);
-  const totalLikes = allNews.value.reduce((sum, news) => sum + (news.likes || 0), 0);
-  const totalFavorites = allNews.value.reduce((sum, news) => sum + (news.favorites || 0), 0);
-  const totalComments = allNews.value.reduce(
-      (sum, news) => sum + (news.comments?.length || 0),
+  const totalViews = allPost.value.reduce((sum, Post) => sum + Post.views, 0);
+  const totalLikes = allPost.value.reduce((sum, Post) => sum + (Post.likes || 0), 0);
+  const totalFavorites = allPost.value.reduce((sum, Post) => sum + (Post.favorites || 0), 0);
+  const totalComments = allPost.value.reduce(
+      (sum, Post) => sum + (Post.comments?.length || 0),
       0
   );
   const uniqueCategories = [
-    ...new Set(allNews.value.map((news) => news.category)),
+    ...new Set(allPost.value.map((Post) => Post.category)),
   ];
   return {
-    totalNews: allNews.value.length,
+    totalPost: allPost.value.length,
     totalCategories: uniqueCategories.length,
     totalViews: totalViews.toLocaleString(),
     totalLikes: totalLikes.toLocaleString(),
@@ -177,10 +177,10 @@ const kpi = computed(() => {
   };
 });
 
-// 新闻分类占比（饼图）数据
+// 帖子分类占比（饼图）数据
 const categoryData = computed(() => {
-  const categoryCount = allNews.value.reduce((acc, news) => {
-    acc[news.category] = (acc[news.category] || 0) + 1;
+  const categoryCount = allPost.value.reduce((acc, Post) => {
+    acc[Post.category] = (acc[Post.category] || 0) + 1;
     return acc;
   }, {});
   return Object.keys(categoryCount).map((key) => ({
@@ -191,14 +191,14 @@ const categoryData = computed(() => {
 
 // 各分类统计数据（用于多个图表）
 const categoryStats = computed(() => {
-  const stats = allNews.value.reduce((acc, news) => {
-    if (!acc[news.category]) {
-      acc[news.category] = {totalViews: 0, totalLikes: 0, totalFavorites: 0, count: 0};
+  const stats = allPost.value.reduce((acc, Post) => {
+    if (!acc[Post.category]) {
+      acc[Post.category] = {totalViews: 0, totalLikes: 0, totalFavorites: 0, count: 0};
     }
-    acc[news.category].totalViews += news.views || 0;
-    acc[news.category].totalLikes += news.likes || 0;
-    acc[news.category].totalFavorites += news.favorites || 0;
-    acc[news.category].count += 1;
+    acc[Post.category].totalViews += Post.views || 0;
+    acc[Post.category].totalLikes += Post.likes || 0;
+    acc[Post.category].totalFavorites += Post.favorites || 0;
+    acc[Post.category].count += 1;
     return acc;
   }, {});
 
@@ -218,8 +218,8 @@ const publicationTrendData = computed(() => {
     d.setDate(d.getDate() - i);
     last30Days[d.toISOString().split("T")[0]] = 0;
   }
-  allNews.value.forEach((news) => {
-    const date = news.date;
+  allPost.value.forEach((Post) => {
+    const date = Post.date;
     if (last30Days[date] !== undefined) {
       last30Days[date]++;
     }
@@ -230,15 +230,13 @@ const publicationTrendData = computed(() => {
   };
 });
 
-// --- ECharts 配置 ---
-
 // 分类占比饼图配置
 const categoryPieOption = computed(() => ({
   tooltip: {trigger: "item"},
   legend: {top: "5%", left: "center"},
   series: [
     {
-      name: "新闻分类",
+      name: "帖子分类",
       type: "pie",
       radius: ["40%", "70%"],
       avoidLabelOverlap: false,
@@ -315,10 +313,10 @@ const publicationLineOption = computed(() => ({
 
 onMounted(async () => {
   try {
-    const response = await newsService.getNews();
-    allNews.value = response.data;
+    const response = await postService.getPost();
+    allPost.value = response.data;
   } catch (error) {
-    console.error("无法加载新闻数据:", error);
+    console.error("无法加载帖子数据:", error);
   } finally {
     loading.value = false;
   }

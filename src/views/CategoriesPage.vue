@@ -1,6 +1,6 @@
 <template>
   <div class="categories-page">
-    <h1 class="page-title">新闻分类</h1>
+    <h1 class="page-title">帖子分类</h1>
     <p class="page-description">浏览我们所有的内容分类，找到您感兴趣的主题。</p>
 
     <div v-loading="isLoading" element-loading-text="正在加载分类..." class="categories-container">
@@ -47,7 +47,7 @@
 
 <script setup>
 import {ref, onMounted} from 'vue';
-import {newsService} from '@/services/newsService';
+import {postService} from '@/services/postService';
 import {ElMessage} from 'element-plus';
 
 const categories = ref([]);
@@ -58,7 +58,7 @@ const fetchCategories = async () => {
   isLoading.value = true;
   error.value = null;
   try {
-    const response = await newsService.getCategories();
+    const response = await postService.getCategories();
     categories.value = response.data.sort((a, b) => b.count - a.count); // 按文章数量降序排列
   } catch (err) {
     console.error('获取分类失败:', err);

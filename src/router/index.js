@@ -3,10 +3,9 @@
 
 import {createRouter, createWebHashHistory} from "vue-router";
 import HomePage from "../views/HomePage.vue"; // 首页组件
-import NewsDetailPage from "../views/NewsDetailPage.vue"; // 新闻详情页面组件
+import NewsDetailPage from "../views/PostDetailPage.vue"; // 帖子详情页面组件
 import CategoriesPage from "../views/CategoriesPage.vue"; // 分类页面组件
-import ArchivedNewsPage from "../views/ArchivedNewsPage.vue"; // 缓存新闻页面组件
-// 动态演示页面组件
+import ArchivedNewsPage from "../views/HistoryPage.vue"; // 缓存帖子页面组件
 import AboutPage from "../views/AboutPage.vue"; // 关于页面组件
 import FavoritesPage from "../views/FavoritesPage.vue"; // 收藏页面组件
 import DashboardPage from "../views/DashboardPage.vue"; // 数据大屏页面
@@ -17,35 +16,35 @@ import ProfilePage from "../views/ProfilePage.vue"; // 个人信息页面
 const routes = [
     // 首页路由
     {path: "/", name: "Home", component: HomePage, meta: {title: "首页"}},
-    // 新闻详情路由（带参数）
+    // 帖子详情路由（带参数）
     {
-        path: "/news/:id",
-        name: "NewsDetail",
+        path: "/post/:id",
+        name: "PostDetail",
         component: NewsDetailPage,
         props: true,
-        meta: {title: "新闻详情"},
+        meta: {title: "帖子详情"},
     },
     // 分类页面路由
     {
         path: "/categories",
         name: "Categories",
         component: CategoriesPage,
-        meta: {title: "新闻分类"},
+        meta: {title: "帖子分类"},
     },
-    // 分类新闻路由（带参数）
+    // 分类帖子路由（带参数）
     {
         path: "/category/:categoryName",
-        name: "CategoryNews",
+        name: "CategoryPost",
         component: HomePage,
         props: (route) => ({category: route.params.categoryName}),
-        meta: {title: "分类新闻"},
+        meta: {title: "帖子分类"},
     },
-    // 缓存新闻路由
+    // 缓存帖子路由
     {
         path: "/archived",
         name: "ArchivedNews",
         component: ArchivedNewsPage,
-        meta: {title: "缓存新闻"},
+        meta: {title: "缓存帖子"},
     },
     // 动态演示页面路由
     // 收藏页面路由
@@ -104,7 +103,7 @@ const router = createRouter({
 
 // 全局前置守卫：设置页面标题
 router.beforeEach((to, from, next) => {
-    document.title = to.meta.title ? `${to.meta.title} - Vue新闻` : "Vue新闻";
+    document.title = to.meta.title ? `${to.meta.title} - Vue帖子` : "Vue帖子";
     next();
 });
 

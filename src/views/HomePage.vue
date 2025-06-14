@@ -4,14 +4,14 @@
       <el-col :xs="24" :sm="18" :md="12">
         <el-input
             v-model.trim="searchTerm"
-            placeholder="搜索新闻标题或内容..."
+            placeholder="搜索帖子标题或内容..."
             clearable
             size="large"
-            @keyup.enter="fetchNewsData"
-            @clear="fetchNewsData"
+            @keyup.enter="fetchPostData"
+            @clear="fetchPostData"
         >
           <template #append>
-            <el-button :icon="Search" @click="fetchNewsData"/>
+            <el-button :icon="Search" @click="fetchPostData"/>
           </template>
         </el-input>
       </el-col>
@@ -19,16 +19,16 @@
 
     <div
         v-loading="isLoading"
-        element-loading-text="正在加载新闻..."
-        class="news-list-area"
+        element-loading-text="正在加载帖子..."
+        class="Post-list-area"
         style="min-height: 400px"
     >
       <el-empty
-          v-if="!isLoading && newsItems.length === 0 && !error"
+          v-if="!isLoading && PostItems.length === 0 && !error"
           :description="
           category
-            ? `在 '${category}' 分类下没有找到新闻。`
-            : '没有找到符合条件的新闻。'
+            ? `在 '${category}' 分类下没有找到帖子。`
+            : '没有找到符合条件的帖子。'
         "
       />
       <el-alert
@@ -41,19 +41,19 @@
           class="mb-4"
       >
         <template #default>
-          <el-button type="primary" plain size="small" @click="fetchNewsData">重试</el-button>
+          <el-button type="primary" plain size="small" @click="fetchPostData">重试</el-button>
         </template>
       </el-alert>
 
-      <ul v-if="newsItems.length > 0" class="news-list">
-        <NewsListItem
-            v-for="article in newsItems"
+      <ul v-if="PostItems.length > 0" class="Post-list">
+        <PostListItem
+            v-for="article in PostItems"
             :key="article.id"
             :article="article"
             :highlight-term="searchTerm"
-            :is-read="globalStore.isNewsRead(article.id)"
+            :is-read="globalStore.isPostRead(article.id)"
             @read-more="handleReadMore"
-            @close-news="handleCloseNewsItem"
+            @close-Post="handleClosePostItem"
         />
       </ul>
     </div>
@@ -63,10 +63,10 @@
 <script setup>
 import {ref, watch, onMounted} from "vue";
 import {useRouter} from "vue-router";
-// 确保引用的是最新的 newsService
-import {newsService} from "@/services/newsService";
+// 确保引用的是最新的 postService
+import {postService} from "@/services/postService";
 import {useGlobalStore} from "@/store/global";
-import NewsListItem from "../components/NewsListItem.vue";
+import PostListItem from "../components/PostListItem.vue";
 import {Search} from "@element-plus/icons-vue";
 
 defineOptions({name: "HomePage"});
@@ -75,13 +75,13 @@ const props = defineProps({category: String});
 const router = useRouter();
 const globalStore = useGlobalStore();
 
-const newsItems = ref([]);
+const PostItems = ref([]);
 const searchTerm = ref("");
 const error = ref(null);
 const isLoading = ref(true);
 
 // ===== 核心修复 3: 重构为单一的数据获取函数, 移除所有分页逻辑 =====
-const fetchNewsData = async () => {
+const fetchPostData = async () => {
   isLoading.value = true;
   error.value = null;
   try {
@@ -94,14 +94,14 @@ const fetchNewsData = async () => {
       params.searchTerm = searchTerm.value;
     }
 
-    // 调用不再支持分页的 getNews 方法
-    const response = await newsService.getNews(params);
-    newsItems.value = response.data; // 直接用返回的数据替换整个列表
+    // 调用不再支持分页的 getPost 方法
+    const response = await postService.getPost(params);
+    PostItems.value = response.data; // 直接用返回的数据替换整个列表
 
   } catch (err) {
-    console.error("获取新闻失败:", err);
-    error.value = "无法加载新闻列表，请检查网络或稍后再试。";
-    newsItems.value = []; // 出错时清空列表
+    console.error("获取帖子失败:", err);
+    error.value = "无法加载帖子列表，请检查网络或稍后再试。";
+    PostItems.value = []; // 出错时清空列表
   } finally {
     isLoading.value = false;
   }
@@ -111,28 +111,27 @@ const fetchNewsData = async () => {
 // 监听分类变化，重新加载数据
 watch(() => props.category, () => {
   searchTerm.value = "";
-  fetchNewsData();
+  fetchPostData();
 });
 
 // 组件挂载时，加载数据
 onMounted(() => {
-  fetchNewsData();
+  fetchPostData();
 });
 
-// --- 以下辅助函数保持不变 ---
 
 function handleReadMore(articleId) {
-  globalStore.markNewsAsRead(articleId);
-  router.push({name: "NewsDetail", params: {id: articleId}});
+  globalStore.markPostAsRead(articleId);
+  router.push({name: "PostDetail", params: {id: articleId}});
 }
 
-function handleCloseNewsItem(payload) {
-  const index = newsItems.value.findIndex(item => item.id === payload.articleId);
+function handleClosePostItem(payload) {
+  const index = PostItems.value.findIndex(item => item.id === payload.articleId);
   if (index !== -1) {
-    newsItems.value.splice(index, 1);
+    PostItems.value.splice(index, 1);
   }
   globalStore.showMessage(
-      `新闻 "${payload.articleId}" 已关闭。原因: ${payload.reason || "未提供"}`,
+      `帖子 "${payload.articleId}" 已关闭。原因: ${payload.reason || "未提供"}`,
       "info"
   );
 }
@@ -147,12 +146,12 @@ function handleCloseNewsItem(payload) {
   margin-bottom: 24px;
 }
 
-.news-list-area {
+.Post-list-area {
   margin-top: 24px;
   transition: opacity 0.3s ease;
 }
 
-.news-list {
+.Post-list {
   padding: 0;
   margin: 0;
   list-style: none;

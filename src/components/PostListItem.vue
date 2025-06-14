@@ -1,13 +1,13 @@
 <template>
   <el-card
-    class="news-list-item"
+    class="Post-list-item"
     :body-style="{ padding: '0px' }"
     @click="handleCardClick"
     shadow="hover"
   >
     <div class="card-content-wrapper">
       <div v-if="article.imageUrl" class="image-container">
-        <el-image :src="article.imageUrl" fit="cover" class="news-image">
+        <el-image :src="article.imageUrl" fit="cover" class="Post-image">
           <template #error>
             <div class="image-slot-error">
               <el-icon><Picture /></el-icon>
@@ -123,7 +123,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["read-more", "close-news"]);
+const emit = defineEmits(["read-more", "close-Post"]);
 const globalStore = useGlobalStore();
 
 const showFeedbackOptions = ref(false);
@@ -142,7 +142,7 @@ const formatDate = (dateString) => {
     return "日期无效"; // 如果日期无效，则返回提示信息
   }
   // 使用台湾时区来格式化日期
-  return date.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
+  return date.toLocaleDateString('zh-CN', { timeZone: 'Asia/Taipei' });
 };
 
 /**
@@ -171,7 +171,7 @@ const submitFeedback = () => {
     return;
   }
   ElMessage.success(`感谢您的反馈: ${selectedReason.value}`);
-  emit("close-news", {
+  emit("close-Post", {
     articleId: props.article.id,
     reason: selectedReason.value,
   });
@@ -226,21 +226,21 @@ const vHighlight = {
   color: #d1d5db; /* 灰白色文字 */
 }
 
-.news-list-item {
+.Post-list-item {
   margin-bottom: 20px;
   background-color: #ffffff; /* 浅色背景 */
   transition: transform 0.2s ease-in-out;
 }
 
-.dark .news-list-item {
+.dark .Post-list-item {
   background-color: #1f2937; /* 深色背景 */
 }
 
-.news-list-item:hover {
+.Post-list-item:hover {
   transform: translateY(-5px);
 }
 
-.dark .news-list-item:hover {
+.dark .Post-list-item:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 更明显的阴影 */
 }
 
@@ -257,7 +257,7 @@ const vHighlight = {
   overflow: hidden;
 }
 
-.news-image {
+.Post-image {
   width: 100%;
   height: 100%;
   object-fit: cover;

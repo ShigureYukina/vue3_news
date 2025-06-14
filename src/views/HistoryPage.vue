@@ -1,5 +1,5 @@
 <template>
-  <div class="archived-news-page">
+  <div class="archived-Post-page">
     <el-page-header title="返回" @back="$router.back()"></el-page-header>
 
     <el-alert type="info" show-icon :closable="false" class="mb-4 mt-4">
@@ -24,9 +24,9 @@
     <div v-else-if="archivedItems.length > 0" class="space-y-4">
       <el-card v-for="item in archivedItems" :key="item.id" shadow="hover">
         <div class="card-content-flex">
-          <div class="news-content-wrapper">
+          <div class="Post-content-wrapper">
             <router-link
-                :to="{ name: 'NewsDetail', params: { id: item.id } }"
+                :to="{ name: 'PostDetail', params: { id: item.id } }"
                 class="no-underline"
             >
               <h4 class="text-md font-semibold mb-2 text-gray-800">{{ item.title }}</h4>
@@ -39,8 +39,8 @@
             </router-link>
           </div>
 
-          <div v-if="item.imageUrl" class="news-image-wrapper">
-            <el-image :src="item.imageUrl" alt="新聞圖片" fit="cover" lazy class="news-image"/>
+          <div v-if="item.imageUrl" class="Post-image-wrapper">
+            <el-image :src="item.imageUrl" alt="新聞圖片" fit="cover" lazy class="Post-image"/>
           </div>
         </div>
       </el-card>
@@ -55,7 +55,7 @@ import {ref, onMounted, onActivated} from "vue";
 import {useGlobalStore} from "@/store/global";
 
 // 為 <keep-alive> 的 include/exclude 功能提供名稱
-defineOptions({name: "ArchivedNewsPage"});
+defineOptions({name: "ArchivedPostPage"});
 
 const archivedItems = ref([]);
 const isLoading = ref(true);
@@ -64,12 +64,12 @@ const lastUpdated = ref(null);
 const internalCounter = ref(0);
 const globalStore = useGlobalStore();
 
-async function loadArchivedNews() {
+async function loadArchivedPost() {
   isLoading.value = true;
   error.value = null;
   try {
-    const cachedNews = globalStore.getCachedNews();
-    archivedItems.value = cachedNews.slice().reverse();
+    const cachedPost = globalStore.getCachedPost();
+    archivedItems.value = cachedPost.slice().reverse();
     lastUpdated.value = new Date().toLocaleString("zh-cn", {hour12: false});
   } catch (err) {
     console.error("加载历史记录失败:", err);
@@ -81,13 +81,13 @@ async function loadArchivedNews() {
 
 // 首次進入元件時觸發
 onMounted(() => {
-  loadArchivedNews();
+  loadArchivedPost();
   internalCounter.value++;
 });
 
 
 onActivated(() => {
-  loadArchivedNews();
+  loadArchivedPost();
   internalCounter.value++;
 });
 
@@ -101,23 +101,23 @@ onActivated(() => {
   gap: 16px; /* 設定內容與圖片間距 */
 }
 
-.news-content-wrapper {
+.Post-content-wrapper {
   flex: 1; /* 佔滿剩餘空間 */
   min-width: 0; /* 防止文字過長時撐破佈局 */
 }
 
-.news-image-wrapper {
+.Post-image-wrapper {
   flex-shrink: 0; /* 防止圖片被壓縮 */
 }
 
-.news-image {
+.Post-image {
   width: 150px; /* 調整圖片寬度 */
   height: auto; /* 設定圖片高度 */
   border-radius: 6px;
   display: block; /* 移除圖片底部多餘的空白 */
 }
 
-.archived-news-page {
+.archived-Post-page {
   padding: 1rem;
 }
 
@@ -137,38 +137,38 @@ onActivated(() => {
   margin-top: 1rem;
 }
 
-.archived-news-page .el-card a {
+.archived-Post-page .el-card a {
   color: inherit;
 }
 
-.dark .archived-news-page .el-card {
+.dark .archived-Post-page .el-card {
   background-color: #1f2937;
 }
 
-.dark .archived-news-page .text-gray-800 {
+.dark .archived-Post-page .text-gray-800 {
   color: #f9fafb;
 }
 
-.dark .archived-news-page .text-gray-500 {
+.dark .archived-Post-page .text-gray-500 {
   color: #9ca3af;
 }
 
-.dark .archived-news-page .text-gray-400 {
+.dark .archived-Post-page .text-gray-400 {
   color: #6b7280;
 }
 
 /* 历史记录专属样式 */
-.archived-news-page .el-alert__content {
+.archived-Post-page .el-alert__content {
   display: flex;
   flex-direction: column;
 }
 
-.archived-news-page .el-alert__description {
+.archived-Post-page .el-alert__description {
   font-size: 14px;
   color: var(--el-text-color-regular);
 }
 
-.archived-news-page .el-empty__description {
+.archived-Post-page .el-empty__description {
   font-size: 14px;
   color: var(--el-text-color-placeholder);
 }

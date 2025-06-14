@@ -1,5 +1,5 @@
 <template>
-  <div class="news-detail-page">
+  <div class="Post-detail-page">
     <el-page-header @back="$router.back()"></el-page-header>
 
     <el-skeleton :rows="10" animated v-if="isLoading"/>
@@ -28,7 +28,7 @@
           分类:
           <router-link
               :to="{
-              name: 'CategoryNews',
+              name: 'CategoryPost',
               params: { categoryName: article.category }
             }"
               class="hover:underline"
@@ -159,21 +159,21 @@
 </template>
 
 <script>
-import {mapStores} from "pinia";
-import {useGlobalStore} from "@/store/global";
-import {newsService} from "@/services/newsService";
-import {Picture, Star, StarFilled, Share, CaretTop} from "@element-plus/icons-vue";
+import { mapStores } from "pinia";
+import { useGlobalStore } from "@/store/global";
+import { postService } from "@/services/postService";
+import { Picture, Star, StarFilled, Share, CaretTop } from "@element-plus/icons-vue";
 
 export default {
-  name: "NewsDetailPage",
-  components: {Picture, Star, StarFilled, Share, CaretTop},
+  name: "PostDetailPage",
+  components: { Picture, Star, StarFilled, Share, CaretTop },
   props: ["id"],
   data() {
     return {
       article: null,
       isLoading: true,
       error: null,
-      commentForm: {text: ""},
+      commentForm: { text: "" },
       comments: [],
       submittingComment: false,
       shareDialogVisible: false,
@@ -191,9 +191,7 @@ export default {
     },
     displayedFavorites() {
       if (!this.article) return 0;
-
       const baseFavorites = this.article.favorites || 0;
-
       return baseFavorites + (this.isArticleFavorite ? 1 : 0);
     },
     isArticleFavorite() {
@@ -207,7 +205,6 @@ export default {
     currentUrl() {
       return window.location.href;
     }
-
   },
 
   methods: {
@@ -215,23 +212,31 @@ export default {
       this.isLoading = true;
       this.error = null;
       try {
-        const response = await newsService.getNewsById(this.id);
+        const response = await postService.getPostById(this.id);
         this.article = response.data;
         this.comments = this.article.comments || [];
-        this.globalStore.addCachedNews(this.article);
+        this.globalStore.addCachedPost(this.article);
       } catch (err) {
-        this.error = err.response?.data?.message || "无法加载新闻详情。";
+        this.error = err.response?.data?.message || "无法加载帖子详情。";
       } finally {
         this.isLoading = false;
       }
     },
+    requireAuth(action) {
+      if (!this.globalStore.isAuthenticated) {
+        this.globalStore.showMessage("请先登录以继续操作", "warning");
+        this.globalStore.setShowLoginModal(true); // 使用全局 store action
+        return false;
+      }
+      return true;
+    },
     toggleFavorite() {
-      if (this.article) {
+      if (this.requireAuth() && this.article) {
         this.globalStore.toggleFavorite(this.article.id);
       }
     },
     handleLike() {
-      if (this.article) {
+      if (this.requireAuth() && this.article) {
         this.globalStore.toggleLike(this.article.id);
       }
     },
@@ -239,11 +244,7 @@ export default {
       this.shareDialogVisible = true;
     },
     async submitComment() {
-       if (!this.globalStore.isAuthenticated) {
-        this.globalStore.showMessage("请先登录以发表评论", "warning");
-        this.$router.push('/auth'); // 跳转到登录页面
-        return;
-      }
+      if (!this.requireAuth()) return;
 
       if (!this.commentForm.text.trim()) {
         this.globalStore.showMessage("评论内容不能为空!", "warning");
@@ -255,16 +256,16 @@ export default {
       const userAvatar = this.globalStore.userAvatar;
 
       this.submittingComment = true;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500)); // 模拟网络延迟
 
       this.comments.unshift({
         id: Date.now(),
         author: username,
         content: this.commentForm.text,
         date: new Date().toLocaleString("zh-CN"),
-        avatarUrl: userAvatar
-          ? userAvatar
-          : `data:image/svg+xml;base64,${btoa(generateUserInitialsSVG(username))}`,
+        avatarUrl: userAvatar,
+        // 此处 avatarSvg 的生成逻辑应在后端或单独的工具函数中处理
+        avatarSvg: `<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#ccc"></circle><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="12">${username.charAt(0)}</text></svg>`
       });
 
       this.commentForm.text = '';
@@ -281,7 +282,6 @@ export default {
       });
     }
   },
-
   created() {
     this.fetchArticleData();
   },
@@ -295,11 +295,11 @@ export default {
 
 <style scoped>
 /* 页面整体布局样式 */
-.news-detail-page {
+.Post-detail-page {
   background-color: #f9fafb;
 }
 
-.dark .news-detail-page {
+.dark .Post-detail-page {
   background-color: #1f2937; /* 暗色背景 */
   color: #f9fafb; /* 浅色文字 */
 }
@@ -518,7 +518,7 @@ section.mt-8 h2.text-xl {
 
 /* 响应式设计调整 */
 @media (max-width: 768px) {
-  .news-detail-page {
+  .Post-detail-page {
     padding: 0;
   }
 
