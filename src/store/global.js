@@ -4,7 +4,7 @@ import {defineStore} from "pinia";
 export const useGlobalStore = defineStore("global", {
     // 状态定义
     state: () => ({
-        // 新增: 当前登录的用户信息，null表示未登录
+        // 当前登录的用户信息，null表示未登录
         currentUser: JSON.parse(sessionStorage.getItem("currentUser")) || null,
         // 消息状态，用于在App.vue中显示提示信息
         message: null, // { text: String, type: String }
@@ -18,35 +18,21 @@ export const useGlobalStore = defineStore("global", {
         favoritePostIds: [],
         // 点赞的帖子ID列表
         likedPostIds: [],
-        // 新增：点赞的评论ID列表
+        // 点赞的评论ID列表
         likedCommentIds: [],
-        // 新增: 控制登录弹窗显示
+        // 控制登录弹窗显示
         showLoginModal: false,
     }),
 
     // Getters 用于派生状态
     getters: {
-        // 新增: 用户是否已登录（经过有效性验证）
-        isAuthenticated: (state) => {
-            // 验证用户对象的基本结构
-            return !!(state.currentUser && state.currentUser.userId && state.currentUser.username);
-        },
-        // 新增: 检查用户会话是否有效
-        isSessionValid: (state) => {
-            // 这里可以添加更复杂的验证逻辑，如检查token过期时间等
-            return !!(state.currentUser && state.currentUser.userId && state.currentUser.username);
-        },
-        // 新增: 当前用户是否是管理员
+        isAuthenticated: (state) => !!(state.currentUser && state.currentUser.userId && state.currentUser.username),
+        isSessionValid: (state) => !!(state.currentUser && state.currentUser.userId && state.currentUser.username),
         isAdmin: (state) => state.currentUser?.role === 'admin',
-        // 新增: 获取当前用户ID
         userId: (state) => state.currentUser?.userId || `guest-${Math.random().toString(36).substring(2, 9)}`,
-        // 新增: 获取当前用户头像
         userAvatar: (state) => state.currentUser?.avatar,
-        // 新增: 获取当前用户名
         username: (state) => state.currentUser?.username || '游客',
-        // 新增: 获取登录弹窗显示状态
         isLoginModalVisible: (state) => state.showLoginModal,
-
         isFavorite: (state) => (PostId) => state.favoritePostIds.includes(PostId),
         favoritePost: (state) => state.cachedPost.filter((Post) => state.favoritePostIds.includes(Post.id)),
         favoriteCount: (state) => state.favoritePostIds.length,
@@ -56,22 +42,29 @@ export const useGlobalStore = defineStore("global", {
 
     // 动作方法
     actions: {
-        // 新增: 用户登录
         login(userData) {
-            // 验证用户数据的有效性
             if (!userData || !userData.userId || !userData.username) {
                 throw new Error('Invalid user data');
             }
-
             this.currentUser = userData;
-            sessionStorage.setItem("currentUser", JSON.stringify(userData)); // 使用 sessionStorage 保持会话
+            sessionStorage.setItem("currentUser", JSON.stringify(userData));
             this.showMessage(`欢迎回来, ${userData.username}!`, "success");
         },
-        // 新增: 用户登出
         logout() {
-            const username = this.currentUser?.username;
             this.currentUser = null;
             sessionStorage.removeItem("currentUser");
+        },
+
+        // --- 新增 Action，用于实现双向绑定 ---
+        /**
+         * 使用从后端获取的真实数据，同步交互状态
+         * @param {object} payload 包含点赞和收藏ID列表的对象, e.g., { likes: [1, 5], favorites: [3, 8] }
+         */
+        syncInteractionState({ likes, favorites }) {
+            // 这个 action 使用后端数据完全覆盖 store 中的旧状态，
+            // 确保刷新页面后，UI状态（如高亮按钮）能正确初始化。
+            this.likedPostIds = likes || [];
+            this.favoritePostIds = favorites || [];
         },
 
         showMessage(text, type = "info") {
@@ -109,12 +102,7 @@ export const useGlobalStore = defineStore("global", {
 
             PostToAdd.forEach((n) => {
                 if (n && n.id && !this.cachedPost.some((item) => item.id === n.id)) {
-                    const PostWithTimestamp = {
-                        ...n,
-                        cachedAt: formattedTime,
-                    };
-
-                    this.cachedPost.push(PostWithTimestamp);
+                    this.cachedPost.push({ ...n, cachedAt: formattedTime });
                 }
             });
         },
@@ -125,10 +113,8 @@ export const useGlobalStore = defineStore("global", {
             const index = this.favoritePostIds.indexOf(PostId);
             if (index > -1) {
                 this.favoritePostIds.splice(index, 1);
-                this.showMessage("已取消收藏", "warning");
             } else {
                 this.favoritePostIds.push(PostId);
-                this.showMessage("收藏成功", "success");
             }
         },
         toggleLike(PostId) {
@@ -137,10 +123,8 @@ export const useGlobalStore = defineStore("global", {
                 this.likedPostIds.splice(index, 1);
             } else {
                 this.likedPostIds.push(PostId);
-                this.showMessage("点赞成功！", "success");
             }
         },
-        // 新增：切换评论点赞状态
         toggleCommentLike(commentId) {
             const index = this.likedCommentIds.indexOf(commentId);
             if (index > -1) {
@@ -149,7 +133,6 @@ export const useGlobalStore = defineStore("global", {
                 this.likedCommentIds.push(commentId);
             }
         },
-        // 新增: 设置登录弹窗显示状态
         setShowLoginModal(visible) {
             this.showLoginModal = visible;
         },

@@ -17,11 +17,15 @@
                 @click="handleLike"
                 :class="{ 'is-liked': isLiked }"
             >
-              <el-icon><CaretTop /></el-icon>
+              <el-icon>
+                <CaretTop/>
+              </el-icon>
               <span>{{ likeCount }}</span>
             </el-button>
             <el-button text @click="showReplyInput = !showReplyInput">
-              <el-icon><ChatDotRound /></el-icon>
+              <el-icon>
+                <ChatDotRound/>
+              </el-icon>
               <span>回复</span>
             </el-button>
           </div>
@@ -59,10 +63,10 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, computed } from 'vue';
-import { useGlobalStore } from '@/store/global';
-import { ElMessage } from 'element-plus';
-import { CaretTop, ChatDotRound } from "@element-plus/icons-vue";
+import {ref, defineProps, defineEmits, computed} from 'vue';
+import {useGlobalStore} from '@/store/global';
+import {ElMessage} from 'element-plus';
+import {CaretTop, ChatDotRound} from "@element-plus/icons-vue";
 
 const props = defineProps({
   comment: {
@@ -129,7 +133,7 @@ const handleReplySubmit = async () => {
     likes: 0,
   };
 
-  emit('comment-submitted', { parentId: props.comment.id, reply: newReply });
+  emit('comment-submitted', {parentId: props.comment.id, reply: newReply});
 
   replyText.value = '';
   showReplyInput.value = false;
@@ -158,6 +162,10 @@ const bubbleUpComment = (payload) => {
 
 .comment-body {
   display: flex;
+}
+
+.comment-author-link {
+  text-decoration: none;
 }
 
 .comment-author-avatar {

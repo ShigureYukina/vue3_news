@@ -1,11 +1,7 @@
 <template>
   <div class="post-detail-page">
     <el-page-header class="page-header" @back="$router.back()">
-      <template #content>
-        <span class="text-large font-600 mr-3"> 文章详情 </span>
-      </template>
     </el-page-header>
-
     <el-skeleton :rows="10" animated v-if="isLoading"/>
 
     <el-alert
@@ -27,24 +23,26 @@
         </h1>
         <div class="article-meta">
           <span class="meta-item">
-             <el-icon><FolderOpened /></el-icon>
+             <el-icon><FolderOpened/></el-icon>
             <router-link
                 :to="{ name: 'CategoryPost', params: { categoryName: article.category } }"
-                class="text-decoration: none"
+                class="meta-link"
             >
               {{ article.category }}
             </router-link>
           </span>
           <span class="meta-item">
-            <el-icon><Calendar /></el-icon>
+            <el-icon><Calendar/></el-icon>
             <span>{{ formattedDate }}</span>
           </span>
           <span class="meta-item" v-if="article.author">
-             <el-icon><User /></el-icon>
-            <span>{{ article.author }}</span>
-          </span>
+  <el-icon><User/></el-icon>
+  <router-link :to="{ name: 'Profile', params: { userId: article.authorId } }" class="meta-link">
+    {{ article.author }}
+  </router-link>
+</span>
           <span class="meta-item">
-            <el-icon><View /></el-icon>
+            <el-icon><View/></el-icon>
             <span>{{ article.views }} 阅读</span>
           </span>
         </div>
@@ -75,15 +73,22 @@
 
       <div class="interaction-bar">
         <el-button text @click="handleLike" :class="{ 'is-active': isArticleLiked }">
-          <el-icon><CaretTop /></el-icon>
-          <span>{{ article.likes + (isArticleLiked ? 1 : 0) }} 点赞</span>
+          <el-icon>
+            <CaretTop/>
+          </el-icon>
+          <span>{{ article.likes }} 点赞</span>
         </el-button>
         <el-button text @click="toggleFavorite" :class="{ 'is-active': isArticleFavorite }">
-          <el-icon><StarFilled v-if="isArticleFavorite" /><Star v-else /></el-icon>
-          <span>收藏</span>
+          <el-icon>
+            <StarFilled v-if="isArticleFavorite"/>
+            <Star v-else/>
+          </el-icon>
+          <span>{{ article.favorites }} 收藏</span>
         </el-button>
         <el-button text @click="openShareDialog">
-          <el-icon><Share /></el-icon>
+          <el-icon>
+            <Share/>
+          </el-icon>
           <span>分享</span>
         </el-button>
       </div>
@@ -118,7 +123,7 @@
               @comment-liked="handleCommentLike"
           />
         </div>
-        <el-empty v-else description="暂无评论，快来发表第一条评论吧！" class="mt-10" />
+        <el-empty v-else description="暂无评论，快来发表第一条评论吧！" class="mt-10"/>
       </section>
     </article>
   </div>
@@ -133,17 +138,19 @@
 </template>
 
 <script>
-import { mapStores } from "pinia";
-import { useGlobalStore } from "@/store/global";
-import { postService } from "@/services/postService";
-import { Picture, Star, StarFilled, Share, CaretTop, Calendar, User, View, FolderOpened } from "@element-plus/icons-vue";
-import CommentItem from "@/components/CommentItem.vue"; // Import the external component
+import {mapStores} from "pinia";
+import {useGlobalStore} from "@/store/global";
+// 重点：引入 userService
+import {postService} from "@/services/postService";
+import {userService} from "@/services/userService";
+import {Picture, Star, StarFilled, Share, CaretTop, Calendar, User, View, FolderOpened} from "@element-plus/icons-vue";
+import CommentItem from "@/components/CommentItem.vue";
 
 export default {
   name: "PostDetailPage",
   components: {
     Picture, Star, StarFilled, Share, CaretTop, Calendar, User, View, FolderOpened,
-    CommentItem // Register the external component
+    CommentItem
   },
   props: ["id"],
   data() {
@@ -151,10 +158,12 @@ export default {
       article: null,
       isLoading: true,
       error: null,
-      commentForm: { text: "" },
+      commentForm: {text: ""},
       comments: [],
       submittingComment: false,
       shareDialogVisible: false,
+      isFavorited: false,
+      isLiked: false,
     };
   },
   computed: {
@@ -165,17 +174,13 @@ export default {
         year: "numeric", month: "long", day: "numeric",
       });
     },
-    displayedFavorites() {
-      if (!this.article) return 0;
-      return (this.article.favorites || 0) + (this.isArticleFavorite ? 1 : 0);
-    },
+    // 核心修改：isArticleFavorite 和 isArticleLiked 现在只依赖 Pinia store
+    // Pinia store 是UI状态的直接来源，我们通过方法调用来确保它和后端同步
     isArticleFavorite() {
-      if (!this.article) return false;
-      return this.globalStore.isFavorite(this.article.id);
+      return this.article ? this.globalStore.isFavorite(this.article.id) : false;
     },
     isArticleLiked() {
-      if (!this.article) return false;
-      return this.globalStore.isLiked(this.article.id);
+      return this.article ? this.globalStore.isLiked(this.article.id) : false;
     },
     currentUrl() {
       return window.location.href;
@@ -188,6 +193,8 @@ export default {
       try {
         const response = await postService.getPostById(this.id);
         this.article = response.data;
+
+        // 初始化评论点赞结构
         const ensureCommentProps = (comments) => {
           return comments.map(c => ({
             ...c,
@@ -195,14 +202,27 @@ export default {
             replies: c.replies ? ensureCommentProps(c.replies) : []
           }));
         };
-        this.comments = ensureCommentProps(response.data.comments || []);
+        this.comments = ensureCommentProps(this.article.comments || []);
+
+        // 缓存文章数据
         this.globalStore.addCachedPost(this.article);
+
+        // ✅ 同步点赞和收藏状态
+        const interaction = userService.getUserPostInteraction(this.globalStore.userId, this.article.id);
+        if (interaction.isLiked && !this.globalStore.isLiked(this.article.id)) {
+          this.globalStore.toggleLike(this.article.id);
+        }
+        if (interaction.isFavorited && !this.globalStore.isFavorite(this.article.id)) {
+          this.globalStore.toggleFavorite(this.article.id);
+        }
+
       } catch (err) {
         this.error = err.response?.data?.message || "无法加载帖子详情。";
       } finally {
         this.isLoading = false;
       }
     },
+
     requireAuth() {
       if (!this.globalStore.isAuthenticated) {
         this.globalStore.showMessage("请先登录以继续操作", "warning");
@@ -211,16 +231,44 @@ export default {
       }
       return true;
     },
-    toggleFavorite() {
-      if (this.requireAuth() && this.article) {
+
+    // --- 核心修改：重构 toggleFavorite 方法 ---
+    async toggleFavorite() {
+      if (!this.requireAuth() || !this.article) return;
+      try {
+        // 1. 调用后端服务更新数据
+        await userService.toggleUserFavorite(this.globalStore.userId, this.article.id);
+
+        // 2. 更新 Pinia store 来同步UI状态（按钮高亮）
         this.globalStore.toggleFavorite(this.article.id);
+
+        // 3. 从后端重新获取最新的收藏总数并更新到页面
+        this.article.favorites = await userService.getPostFavoriteCount(this.article.id);
+
+      } catch (e) {
+        this.globalStore.showMessage('操作失败，请稍后重试', 'error');
       }
     },
-    handleLike() {
-      if (this.requireAuth() && this.article) {
+
+    // --- 核心修改：重构 handleLike 方法 ---
+    async handleLike() {
+      if (!this.requireAuth() || !this.article) return;
+      try {
+        // 1. 调用后端服务更新数据
+        await userService.toggleUserLike(this.globalStore.userId, this.article.id);
+
+        // 2. 更新 Pinia store 来同步UI状态（按钮高亮）
         this.globalStore.toggleLike(this.article.id);
+
+        // 3. 从后端重新获取最新的点赞总数并更新到页面
+        this.article.likes = await userService.getPostLikeCount(this.article.id);
+
+      } catch(e) {
+        this.globalStore.showMessage('操作失败，请稍后重试', 'error');
       }
     },
+
+    // ... 其他方法保持不变 ...
     openShareDialog() {
       this.shareDialogVisible = true;
     },
@@ -248,7 +296,7 @@ export default {
       this.globalStore.showMessage("评论已提交!", "success");
       this.submittingComment = false;
     },
-    handleNewReply({ parentId, reply }) {
+    handleNewReply({parentId, reply}) {
       const findAndAddReply = (comments, pId, newReply) => {
         for (const comment of comments) {
           if (comment.id === pId) {
@@ -310,9 +358,6 @@ export default {
 
 <style scoped>
 /* --- Overall Page Layout --- */
-.post-detail-page {
-  padding-bottom: 40px;
-}
 
 .dark .post-detail-page {
   background-color: #111827;
@@ -323,6 +368,7 @@ export default {
   background-color: var(--el-bg-color-overlay);
   border-bottom: 1px solid var(--el-border-color-light);
 }
+
 .dark .page-header {
   background-color: #1f2937;
   border-bottom-color: #374151;
@@ -331,11 +377,12 @@ export default {
 /* --- Article --- */
 .article-container {
   padding: 20px;
-  margin: 20px auto;
+  margin: auto;
   background-color: var(--el-bg-color-overlay);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.02), 0 4px 8px rgba(0,0,0,.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .02), 0 4px 8px rgba(0, 0, 0, .04);
 }
+
 .dark .article-container {
   background-color: #1f2937;
   box-shadow: none;
@@ -352,7 +399,10 @@ export default {
   line-height: 1.3;
   margin-bottom: 16px;
 }
-.dark .article-title { color: #f9fafb; }
+
+.dark .article-title {
+  color: #f9fafb;
+}
 
 .article-meta {
   display: flex;
@@ -362,15 +412,30 @@ export default {
   font-size: 0.9rem;
   color: #6b7280;
 }
-.dark .article-meta { color: #d1d5db; }
+
+.dark .article-meta {
+  color: #d1d5db;
+}
 
 .meta-item {
   display: flex;
   align-items: center;
 }
+
 .meta-item .el-icon {
   margin-right: 6px;
   font-size: 1rem;
+}
+
+.meta-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.meta-link:hover {
+  color: var(--el-color-primary);
+  text-decoration: underline;
 }
 
 .article-image {
@@ -384,21 +449,28 @@ export default {
   line-height: 1.8;
   color: #374151;
 }
-.dark .article-content { color: #d1d5db; }
+
+.dark .article-content {
+  color: #d1d5db;
+}
 
 /* --- Interaction Bar --- */
 .interaction-bar {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 32px;
   padding: 8px;
 }
+
 .interaction-bar .el-button {
   font-size: 1rem;
   color: #6b7280;
 }
-.dark .interaction-bar .el-button { color: #d1d5db; }
+
+.dark .interaction-bar .el-button {
+  color: #d1d5db;
+}
+
 .interaction-bar .el-button.is-active {
   color: var(--el-color-primary);
 }
@@ -407,6 +479,7 @@ export default {
 .section-divider {
   margin: 40px 0;
 }
+
 .dark .section-divider {
   border-color: #374151;
 }
@@ -415,16 +488,19 @@ export default {
 .comment-section {
   margin-top: 20px;
 }
+
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 24px;
   color: #1f2937;
 }
-.dark .section-title { color: #f9fafb; }
+
+.dark .section-title {
+  color: #f9fafb;
+}
 
 .comment-list {
   margin-top: 32px;
 }
-
 </style>

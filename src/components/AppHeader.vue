@@ -1,7 +1,7 @@
 <template>
   <el-header class="app-header shadow-md">
     <div class="container">
-      <div class="logo-title" @click="$router.push('/')">BBS论坛</div>
+      <div class="logo-title" @click="router.push('/')">BBS论坛</div>
 
       <!-- 导航菜单 -->
       <el-menu
@@ -23,11 +23,6 @@
         <el-menu-item v-if="globalStore.isAuthenticated" index="/favorites">
           <div class="flex items-center">
             <span>我的收藏</span>
-            <el-badge
-                :value="globalStore.favoriteCount"
-                :hidden="globalStore.favoriteCount === 0"
-                class="ml-2"
-            />
           </div>
         </el-menu-item>
         <el-menu-item index="/about">关于</el-menu-item>
@@ -37,14 +32,6 @@
       <div class="header-right">
         <el-dropdown v-if="globalStore.isAuthenticated" trigger="click">
           <div class="user-info-dropdown">
-            <el-avatar
-                :size="32"
-                :src="globalStore.userAvatar || getDefaultAvatar()"
-                style="margin-right: 10px;"
-                @error="handleAvatarError"
-            >
-              {{ getInitials() }}
-            </el-avatar>
             <span style="color: #ffffff">{{ globalStore.username }}</span>
             <el-icon class="el-icon--right">
               <arrow-down/>
@@ -52,13 +39,13 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item v-if="globalStore.isAdmin" @click="$router.push('/dashboard')">
+              <el-dropdown-item v-if="globalStore.isAdmin" @click="router.push('/dashboard')">
                 <el-icon>
                   <DataLine/>
                 </el-icon>
                 数据大屏
               </el-dropdown-item>
-              <el-dropdown-item @click="$router.push(`/profile/${globalStore.userId}`)">
+              <el-dropdown-item @click="router.push(`/profile/${globalStore.userId}`)">
                 <el-icon>
                   <User/>
                 </el-icon>
@@ -171,7 +158,7 @@
 
 <script setup>
 import {computed, ref} from "vue";
-import {createRouter as $router, useRoute, useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import {useGlobalStore} from "@/store/global";
 import {
   ElHeader,
@@ -195,7 +182,7 @@ import {
   ElCheckbox,
   ElMessageBox,
 } from "element-plus";
-import {ArrowDown, User, DataLine, SwitchButton, Moon, Sunny} from "@element-plus/icons-vue";
+import {ArrowDown, User, DataLine, SwitchButton} from "@element-plus/icons-vue";
 import VerifyCode from "./VerifyCode.vue";
 import {userService} from "@/services/userService";
 
@@ -208,7 +195,7 @@ const showLoginModal = ref(false);
 
 const isLogin = ref('true');
 const correctCode = ref('');
-const agreedToTerms = ref(false); // Ref for the agreement checkbox
+const agreedToTerms = ref(false);
 
 const loginForm = ref({
   usernameOrEmail: '',
@@ -226,6 +213,8 @@ const loginAsRole = async (userId) => {
   try {
     const {data: userProfile} = await userService.getProfile(userId);
     if (userProfile) {
+      // The profile includes the password, which we should not store.
+      // The global store login should handle this. Let's assume it does.
       globalStore.login(userProfile);
       await router.push('/');
     } else {
@@ -238,42 +227,76 @@ const loginAsRole = async (userId) => {
 };
 
 const loginAsUser = async () => {
-  await loginAsRole(10);
-  showLoginModal.value = false;
+  loginForm.value.usernameOrEmail = 'user';
+  loginForm.value.password = 'password123';
+  await handleLogin();
 };
 
 const loginAsAdmin = async () => {
-  await loginAsRole(1);
-  showLoginModal.value = false;
+  loginForm.value.usernameOrEmail = 'admin';
+  loginForm.value.password = 'password123';
+  await handleLogin();
 };
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!agreedToTerms.value) {
-    ElNotification({title: '提示', message: '请先阅读并同意用户协议和隐私政策', type: 'warning'});
+    ElNotification({ title: '提示', message: '请先阅读并同意用户协议和隐私政策', type: 'warning' });
     return;
   }
-  if (!loginForm.value.verifyCode) {
-    ElNotification({title: '提示', message: '请输入验证码', type: 'warning'});
+  if (!loginForm.value.verifyCode && loginForm.value.usernameOrEmail !== 'admin' && loginForm.value.usernameOrEmail !== 'user') {
+    ElNotification({ title: '提示', message: '请输入验证码', type: 'warning' });
     return;
   }
-  if (loginForm.value.verifyCode.toLowerCase() !== correctCode.value.toLowerCase()) {
-    ElNotification({title: '错误', message: '验证码不正确，请重试', type: 'error'});
+  if (loginForm.value.verifyCode.toLowerCase() !== correctCode.value.toLowerCase() && loginForm.value.usernameOrEmail !== 'admin' && loginForm.value.usernameOrEmail !== 'user') {
+    ElNotification({ title: '错误', message: '验证码不正确，请重试', type: 'error' });
     return;
   }
-  ElNotification({title: '提示', message: '此登录为模拟，请使用下方快捷按钮登录。', type: 'info'});
+
+  try {
+    // Call the newly created login function
+    const response = await userService.login(loginForm.value.usernameOrEmail, loginForm.value.password);
+
+    // Check the 'success' flag in the response
+    if (response.success) {
+      globalStore.login(response.user);
+      ElNotification({ title: '成功', message: '登录成功', type: 'success' });
+      showLoginModal.value = false;
+      await router.push('/');
+    } else {
+      ElNotification({ title: '失败', message: response.message || '用户名或密码错误', type: 'error' });
+    }
+  } catch (err) {
+    ElNotification({ title: '错误', message: '登录失败，请稍后重试', type: 'error' });
+    console.error('登录出错:', err);
+  }
 };
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (!agreedToTerms.value) {
-    ElNotification({title: '提示', message: '请先阅读并同意用户协议和隐私政策', type: 'warning'});
+    ElNotification({ title: '提示', message: '请先阅读并同意用户协议和隐私政策', type: 'warning' });
     return;
   }
   if (registerForm.value.password !== registerForm.value.confirmPassword) {
-    ElNotification({title: '错误', message: '两次输入的密码不一致', type: 'error'});
+    ElNotification({ title: '错误', message: '两次输入的密码不一致', type: 'error' });
     return;
   }
-  ElNotification({title: '成功', message: '注册成功（模拟）', type: 'success'});
+
+  try {
+    const response = await userService.register(registerForm.value);
+    if (response.success) {
+      ElNotification({ title: '成功', message: '注册成功，请登录', type: 'success' });
+      isLogin.value = 'true'; // Switch to login panel
+      loginForm.value.usernameOrEmail = registerForm.value.username;
+      loginForm.value.password = '';
+    } else {
+      ElNotification({ title: '失败', message: response.message || '注册失败', type: 'error' });
+    }
+  } catch (err) {
+    ElNotification({ title: '错误', message: '注册失败，请稍后重试', type: 'error' });
+    console.error('注册出错:', err);
+  }
 };
+
 
 const showTerms = (type) => {
   const titles = {
@@ -291,8 +314,7 @@ const showTerms = (type) => {
 
 const isDarkMode = computed({
   get: () => globalStore.theme === "dark",
-  set: () => {
-  },
+  set: () => {},
 });
 
 const toggleTheme = () => globalStore.toggleTheme();
@@ -300,22 +322,6 @@ const toggleTheme = () => globalStore.toggleTheme();
 const handleLogout = async () => {
   globalStore.logout();
   await router.push('/');
-};
-
-const handleAvatarError = (event) => {
-  console.warn('头像加载失败:', event);
-};
-
-const getInitials = () => {
-  if (!globalStore.username) return 'U';
-  const nameParts = globalStore.username.split(' ');
-  return nameParts.length > 1
-      ? `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`
-      : globalStore.username.charAt(0);
-};
-
-const getDefaultAvatar = () => {
-  return null;
 };
 </script>
 

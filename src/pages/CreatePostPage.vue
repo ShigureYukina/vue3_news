@@ -2,13 +2,6 @@
   <div class="create-post-page">
     <el-page-header :title="pageTitle" @back="$router.back()"></el-page-header>
 
-    <!-- Announcement Component - Hidden for Admins -->
-    <Announcement
-        v-if="showAnnouncement && !globalStore.isAdmin"
-        @close="showAnnouncement = false"
-        class="announcement-bar"
-    />
-
     <el-card class="form-container" shadow="never">
       <!-- Admin specific controls -->
       <div v-if="globalStore.isAdmin" class="admin-controls">
@@ -19,9 +12,9 @@
               inactive-text="发布帖子"
           />
         </el-form-item>
-        
+
         <!-- 当发布公告时显示公告类型选择器 -->
-        
+
         <el-alert
             v-if="isPublishingAnnouncement"
             title="管理员模式"
@@ -45,7 +38,7 @@
 
       <el-form :model="postForm" :rules="rules" ref="postFormRef" label-position="top" @submit.prevent="submitForm">
         <el-form-item label="标题" prop="title">
-          <el-input v-model="postForm.title" placeholder="请输入标题" size="large" />
+          <el-input v-model="postForm.title" placeholder="请输入标题" size="large"/>
         </el-form-item>
 
         <!-- Category selection is shown for non-admins or admins in 'article' mode -->
@@ -92,11 +85,11 @@ const categories = ref([]);
 const isPublishingAnnouncement = ref(globalStore.isAdmin);
 
 const announcementTypes = [
-  { value: '系统公告', label: '系统公告' },
-  { value: '活动通知', label: '活动通知' },
-  { value: '规则调整', label: '规则调整' },
-  { value: '节日祝福', label: '节日祝福' },
-  { value: '维护通知', label: '维护通知' }
+  {value: '系统公告', label: '系统公告'},
+  {value: '活动通知', label: '活动通知'},
+  {value: '规则调整', label: '规则调整'},
+  {value: '节日祝福', label: '节日祝福'},
+  {value: '维护通知', label: '维护通知'}
 ];
 
 const isAnnouncementMode = computed(() => {
@@ -261,6 +254,7 @@ const resetForm = () => {
   border-radius: 4px;
   margin-bottom: 22px;
 }
+
 .dark .admin-controls {
   background-color: rgba(230, 162, 60, 0.1);
   border-color: rgba(230, 162, 60, 0.3);
